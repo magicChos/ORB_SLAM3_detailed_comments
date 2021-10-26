@@ -3,7 +3,8 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "/home/han/project/ORB_SLAM3_detailed_comments/include"
             ],
             "defines": [
                 "_DEBUG",

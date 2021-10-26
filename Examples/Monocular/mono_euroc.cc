@@ -25,7 +25,8 @@
 
 #include<opencv2/core/core.hpp>
 
-#include<System.h>
+// #include<System.h>
+#include "System.h"
 
 using namespace std;
 
@@ -79,6 +80,13 @@ int main(int argc, char **argv)
     cout.precision(17);
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
+    //  * @param[in] strVocFile               //词袋文件所在路径
+    //  * @param[in] strSettingsFile          //配置文件所在路径 
+    //  * @param[in] sensor                   //传感器类型 
+    //  * @param[in] bUseViewer               //指定是否使用可视化界面
+    //  * @param[in] initFr                   //initFr表示初始化帧的id,开始设置为0 
+    //  * @param[out] strSequence             //序列名,在跟踪线程和局部建图线程用得到 
+    //  * @param[in] strLoadingFile           //看起来作者貌似想加地图重载功能的一个参数
     ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::MONOCULAR, true);
 
     for (seq = 0; seq<num_seq; seq++)
