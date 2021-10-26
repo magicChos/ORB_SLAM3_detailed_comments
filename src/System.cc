@@ -425,7 +425,7 @@ namespace ORB_SLAM3
                 mbReset = false;
                 mbResetActiveMap = false;
             }
-            //如果检测到重置活动地图,讲重置地图设置
+            //如果检测到重置活动地图,将重置地图设置
             else if (mbResetActiveMap)
             {
                 cout << "SYSTEM-> Reseting active map in monocular case" << endl;
@@ -435,7 +435,7 @@ namespace ORB_SLAM3
         }
         // 如果是单目VIO模式，把IMU数据存储到mlQueueImuData
         if (mSensor == System::IMU_MONOCULAR)
-            for (size_t i_imu = 0; i_imu < vImuMeas.size(); i_imu++)
+            for (size_t i_imu = 0, length = vImuMeas.size(); i_imu < length; i_imu++)
                 mpTracker->GrabImuData(vImuMeas[i_imu]);
 
         // 计算相机位姿
