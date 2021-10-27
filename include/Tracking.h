@@ -69,6 +69,7 @@ public:
 
     // Preprocess the input and call Track(). Extract features and performs stereo matching.
     cv::Mat GrabImageStereo(const cv::Mat &imRectLeft,const cv::Mat &imRectRight, const double &timestamp, string filename);
+    
     cv::Mat GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const double &timestamp, string filename);
     cv::Mat GrabImageMonocular(const cv::Mat &im, const double &timestamp, string filename);
     // cv::Mat GrabImageImuMonocular(const cv::Mat &im, const double &timestamp);
@@ -267,8 +268,11 @@ protected:
     Atlas* mpAtlas;
 
     //Calibration matrix
+    // 相机内参
     cv::Mat mK;
+    // 畸变系数
     cv::Mat mDistCoef;
+    // 基线长度
     float mbf;
 
     //New KeyFrame rules (according to fps)
@@ -324,6 +328,7 @@ protected:
     double mTime_LocalMapTrack;
     double mTime_NewKF_Dec;
 
+    // 定义的相机对象
     GeometricCamera* mpCamera, *mpCamera2;
 
     int initID, lastID;
