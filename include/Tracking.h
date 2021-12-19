@@ -115,7 +115,9 @@ public:
         OK_KLT=5
     };
 
+    // 记录跟踪状态
     eTrackingState mState;
+    // 记录最后的处理状态
     eTrackingState mLastProcessedState;
 
     // Input sensor

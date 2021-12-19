@@ -1,20 +1,20 @@
 /**
-* This file is part of ORB-SLAM3
-*
-* Copyright (C) 2017-2020 Carlos Campos, Richard Elvira, Juan J. Gómez Rodríguez, José M.M. Montiel and Juan D. Tardós, University of Zaragoza.
-* Copyright (C) 2014-2016 Raúl Mur-Artal, José M.M. Montiel and Juan D. Tardós, University of Zaragoza.
-*
-* ORB-SLAM3 is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
-* License as published by the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* ORB-SLAM3 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
-* the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License along with ORB-SLAM3.
-* If not, see <http://www.gnu.org/licenses/>.
-*/
+ * This file is part of ORB-SLAM3
+ *
+ * Copyright (C) 2017-2020 Carlos Campos, Richard Elvira, Juan J. Gómez Rodríguez, José M.M. Montiel and Juan D. Tardós, University of Zaragoza.
+ * Copyright (C) 2014-2016 Raúl Mur-Artal, José M.M. Montiel and Juan D. Tardós, University of Zaragoza.
+ *
+ * ORB-SLAM3 is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * ORB-SLAM3 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with ORB-SLAM3.
+ * If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include "System.h"
 #include "Converter.h"
@@ -40,7 +40,7 @@ namespace ORB_SLAM3
                    const string &strSettingsFile,               //配置文件所在路径
                    const eSensor sensor,                        //传感器类型
                    const bool bUseViewer,                       //是否使用可视化界面
-                   const int initFr,                            //initFr表示初始化帧的id,开始设置为0
+                   const int initFr,                            // initFr表示初始化帧的id,开始设置为0
                    const string &strSequence,                   //序列名,在跟踪线程和局部建图线程用得到
                    const string &strLoadingFile                 //看起来作者貌似想加地图重载功能的一个参数
                    ) : mSensor(sensor),                         //初始化传感器类型
@@ -65,14 +65,14 @@ namespace ORB_SLAM3
         else if (mSensor == STEREO)
             cout << "Stereo" << endl; //双目
         else if (mSensor == RGBD)
-            cout << "RGB-D" << endl; //RGBD相机
+            cout << "RGB-D" << endl; // RGBD相机
         else if (mSensor == IMU_MONOCULAR)
             cout << "Monocular-Inertial" << endl; //单目 + imu
         else if (mSensor == IMU_STEREO)
             cout << "Stereo-Inertial" << endl; //双目 + imu
 
-        //Check settings file
-        // Step 2 读取配置文件
+        // Check settings file
+        //  Step 2 读取配置文件
         cv::FileStorage fsSettings(strSettingsFile.c_str(), //将配置文件名转换成为字符串
                                    cv::FileStorage::READ);  //只读
         //如果打开失败，就输出错误信息
@@ -86,7 +86,7 @@ namespace ORB_SLAM3
         bool loadedAtlas = false;
 
         //----
-        //Load ORB Vocabulary
+        // Load ORB Vocabulary
         // Step 3 加载ORB字典
         cout << endl
              << "Loading ORB Vocabulary. This could take a while..." << endl;
@@ -105,12 +105,12 @@ namespace ORB_SLAM3
         cout << "Vocabulary loaded!" << endl
              << endl;
 
-        //Create KeyFrame Database
-        // Step 4 创建关键帧数据库
+        // Create KeyFrame Database
+        //  Step 4 创建关键帧数据库
         mpKeyFrameDatabase = new KeyFrameDatabase(*mpVocabulary);
 
-        //Create the Atlas
-        // Step 5 创建多地图，参数0表示初始化关键帧id为0
+        // Create the Atlas
+        //  Step 5 创建多地图，参数0表示初始化关键帧id为0
         mpAtlas = new Atlas(0);
 
         // 下面注释看起来作者貌似想加地图重载功能，期待期待
@@ -186,24 +186,24 @@ namespace ORB_SLAM3
             mpAtlas->SetInertialSensor();
 
         // Step 6 依次创建跟踪、局部建图、闭环、显示线程
-        //Create Drawers. These are used by the Viewer
+        // Create Drawers. These are used by the Viewer
         // 创建用于显示帧和地图的类，由Viewer调用
         mpFrameDrawer = new FrameDrawer(mpAtlas);
         mpMapDrawer = new MapDrawer(mpAtlas, strSettingsFile);
 
-        //Initialize the Tracking thread
+        // Initialize the Tracking thread
         //(it will live in the main thread of execution, the one that called this constructor)
-        // 创建跟踪线程（主线程）,不会立刻开启,会在对图像和imu预处理后在main主线程种执行
-        cout << "Seq. Name: " << strSequence << endl;
+        //  创建跟踪线程（主线程）,不会立刻开启,会在对图像和imu预处理后在main主线程种执行
+       
         mpTracker = new Tracking(this, mpVocabulary, mpFrameDrawer, mpMapDrawer,
                                  mpAtlas, mpKeyFrameDatabase, strSettingsFile, mSensor, strSequence);
 
-        //Initialize the Local Mapping thread and launch
+        // Initialize the Local Mapping thread and launch
         //创建并开启local mapping线程
         mpLocalMapper = new LocalMapping(this, mpAtlas, mSensor == MONOCULAR || mSensor == IMU_MONOCULAR, mSensor == IMU_MONOCULAR || mSensor == IMU_STEREO, strSequence);
         mptLocalMapping = new thread(&ORB_SLAM3::LocalMapping::Run, mpLocalMapper);
 
-        //initFr表示初始化帧的id，代码里设置为0
+        // initFr表示初始化帧的id，代码里设置为0
         mpLocalMapper->mInitFr = initFr;
         //设置最远3D地图点的深度值，如果超过阈值，说明可能三角化不太准确，丢弃
         mpLocalMapper->mThFarPoints = fsSettings["thFarPoints"];
@@ -216,14 +216,14 @@ namespace ORB_SLAM3
         else
             mpLocalMapper->mbFarPoints = false;
 
-        //Initialize the Loop Closing thread and launch
-        // mSensor!=MONOCULAR && mSensor!=IMU_MONOCULAR
-        // 创建并开启闭环线程
+        // Initialize the Loop Closing thread and launch
+        //  mSensor!=MONOCULAR && mSensor!=IMU_MONOCULAR
+        //  创建并开启闭环线程
         mpLoopCloser = new LoopClosing(mpAtlas, mpKeyFrameDatabase, mpVocabulary, mSensor != MONOCULAR); // mSensor!=MONOCULAR);
         mptLoopClosing = new thread(&ORB_SLAM3::LoopClosing::Run, mpLoopCloser);
 
-        //Initialize the Viewer thread and launch
-        // 创建并开启显示线程
+        // Initialize the Viewer thread and launch
+        //  创建并开启显示线程
         if (bUseViewer)
         {
             mpViewer = new Viewer(this, mpFrameDrawer, mpMapDrawer, mpTracker, strSettingsFile);
@@ -233,8 +233,8 @@ namespace ORB_SLAM3
             mpViewer->both = mpFrameDrawer->both;
         }
 
-        //Set pointers between threads
-        // 设置线程间的指针
+        // Set pointers between threads
+        //  设置线程间的指针
         mpTracker->SetLocalMapper(mpLocalMapper);
         mpTracker->SetLoopClosing(mpLoopCloser);
 
@@ -372,14 +372,14 @@ namespace ORB_SLAM3
     }
 
     /**
- * @brief 单目/单目VIO跟踪
- * 
- * @param[in] im                灰度图像
- * @param[in] timestamp         图像时间戳
- * @param[in] vImuMeas          上一帧到当前帧图像之间的IMU测量值
- * @param[in] filename          调试用的文件名
- * @return cv::Mat              当前帧位姿Tcw
- */
+     * @brief 单目/单目VIO跟踪
+     *
+     * @param[in] im                灰度图像
+     * @param[in] timestamp         图像时间戳
+     * @param[in] vImuMeas          上一帧到当前帧图像之间的IMU测量值
+     * @param[in] filename          调试用的文件名
+     * @return cv::Mat              当前帧位姿Tcw
+     */
     cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp, const vector<IMU::Point> &vImuMeas, string filename)
     {
         // 确保是单目或单目VIO模式
@@ -661,21 +661,21 @@ namespace ORB_SLAM3
         list<double>::iterator lT = mpTracker->mlFrameTimes.begin();
         list<bool>::iterator lbL = mpTracker->mlbLost.begin();
 
-        //cout << "size mlpReferences: " << mpTracker->mlpReferences.size() << endl;
-        //cout << "size mlRelativeFramePoses: " << mpTracker->mlRelativeFramePoses.size() << endl;
-        //cout << "size mpTracker->mlFrameTimes: " << mpTracker->mlFrameTimes.size() << endl;
-        //cout << "size mpTracker->mlbLost: " << mpTracker->mlbLost.size() << endl;
+        // cout << "size mlpReferences: " << mpTracker->mlpReferences.size() << endl;
+        // cout << "size mlRelativeFramePoses: " << mpTracker->mlRelativeFramePoses.size() << endl;
+        // cout << "size mpTracker->mlFrameTimes: " << mpTracker->mlFrameTimes.size() << endl;
+        // cout << "size mpTracker->mlbLost: " << mpTracker->mlbLost.size() << endl;
 
         for (list<cv::Mat>::iterator lit = mpTracker->mlRelativeFramePoses.begin(),
                                      lend = mpTracker->mlRelativeFramePoses.end();
              lit != lend; lit++, lRit++, lT++, lbL++)
         {
-            //cout << "1" << endl;
+            // cout << "1" << endl;
             if (*lbL)
                 continue;
 
             KeyFrame *pKF = *lRit;
-            //cout << "KF: " << pKF->mnId << endl;
+            // cout << "KF: " << pKF->mnId << endl;
 
             cv::Mat Trw = cv::Mat::eye(4, 4, CV_32F);
 
@@ -686,25 +686,25 @@ namespace ORB_SLAM3
             if (!pKF)
                 continue;
 
-            //cout << "2.5" << endl;
+            // cout << "2.5" << endl;
 
             while (pKF->isBad())
             {
-                //cout << " 2.bad" << endl;
+                // cout << " 2.bad" << endl;
                 Trw = Trw * pKF->mTcp;
                 pKF = pKF->GetParent();
-                //cout << "--Parent KF: " << pKF->mnId << endl;
+                // cout << "--Parent KF: " << pKF->mnId << endl;
             }
 
             if (!pKF || pKF->GetMap() != pBiggerMap)
             {
-                //cout << "--Parent KF is from another map" << endl;
+                // cout << "--Parent KF is from another map" << endl;
                 /*if(pKF)
                 cout << "--Parent KF " << pKF->mnId << " is from another map " << pKF->GetMap()->GetId() << endl;*/
                 continue;
             }
 
-            //cout << "3" << endl;
+            // cout << "3" << endl;
 
             Trw = Trw * pKF->GetPose() * Twb; // Tcp*Tpw*Twb0=Tcb0 where b0 is the new world reference
 
@@ -729,7 +729,7 @@ namespace ORB_SLAM3
 
             // cout << "5" << endl;
         }
-        //cout << "end saving trajectory" << endl;
+        // cout << "end saving trajectory" << endl;
         f.close();
         cout << endl
              << "End of saving trajectory to " << filename << " ..." << endl;
@@ -1102,4 +1102,4 @@ string System::CalculateCheckSum(string filename, int type)
     return checksum;
 }*/
 
-} //namespace ORB_SLAM
+} // namespace ORB_SLAM

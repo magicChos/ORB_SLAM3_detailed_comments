@@ -200,10 +200,12 @@ namespace ORB_SLAM3
         ORBVocabulary *mpVocabulary;
 
         // KeyFrame database for place recognition (relocalization and loop detection).
+        // 关键帧数据库用于位姿识别（重定位与闭环检测）
         KeyFrameDatabase *mpKeyFrameDatabase;
 
         // Map structure that stores the pointers to all KeyFrames and MapPoints.
         //Map* mpMap;
+        // 存储所有关键帧和地图点指针的地图结构
         Atlas *mpAtlas;
 
         // Tracker. It receives a frame and computes the associated camera pose.
@@ -212,10 +214,12 @@ namespace ORB_SLAM3
         Tracking *mpTracker;
 
         // Local Mapper. It manages the local map and performs local bundle adjustment.
+        // 局部mappper，它管理局部地图和运行局部BA
         LocalMapping *mpLocalMapper;
 
         // Loop Closer. It searches loops with every new keyframe. If there is a loop it performs
         // a pose graph optimization and full bundle adjustment (in a new thread) afterwards.
+        // 闭环。对每个新关键帧执行闭环，当有一个闭环时，它运行位姿图优化和在一个新线程中执行全部BA
         LoopClosing *mpLoopCloser;
 
         // The viewer draws the map and the current camera pose. It uses Pangolin.
@@ -242,8 +246,11 @@ namespace ORB_SLAM3
         bool mbDeactivateLocalizationMode;
 
         // Tracking state
+        // 记录跟踪状态
         int mTrackingState;
+        // 记录跟踪的关键点立体坐标和深度
         std::vector<MapPoint *> mTrackedMapPoints;
+        // 无畸变的关键点坐标
         std::vector<cv::KeyPoint> mTrackedKeyPointsUn;
         std::mutex mMutexState;
     };

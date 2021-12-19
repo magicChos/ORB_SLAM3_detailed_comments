@@ -1,21 +1,20 @@
 /**
-* This file is part of ORB-SLAM3
-*
-* Copyright (C) 2017-2020 Carlos Campos, Richard Elvira, Juan J. Gómez Rodríguez, José M.M. Montiel and Juan D. Tardós, University of Zaragoza.
-* Copyright (C) 2014-2016 Raúl Mur-Artal, José M.M. Montiel and Juan D. Tardós, University of Zaragoza.
-*
-* ORB-SLAM3 is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
-* License as published by the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* ORB-SLAM3 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
-* the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License along with ORB-SLAM3.
-* If not, see <http://www.gnu.org/licenses/>.
-*/
-
+ * This file is part of ORB-SLAM3
+ *
+ * Copyright (C) 2017-2020 Carlos Campos, Richard Elvira, Juan J. Gómez Rodríguez, José M.M. Montiel and Juan D. Tardós, University of Zaragoza.
+ * Copyright (C) 2014-2016 Raúl Mur-Artal, José M.M. Montiel and Juan D. Tardós, University of Zaragoza.
+ *
+ * ORB-SLAM3 is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * ORB-SLAM3 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with ORB-SLAM3.
+ * If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #ifndef MAP_H
 #define MAP_H
@@ -29,177 +28,231 @@
 
 #include <boost/serialization/base_object.hpp>
 
-
 namespace ORB_SLAM3
 {
 
-class MapPoint;
-class KeyFrame;
-class Atlas;
-class KeyFrameDatabase;
+    class MapPoint;
+    class KeyFrame;
+    class Atlas;
+    class KeyFrameDatabase;
 
-class Map
-{
-    friend class boost::serialization::access;
-
-    template<class Archive>
-    void serialize(Archive &ar, const unsigned int version)
+    class Map
     {
-        ar & mnId;
-        ar & mnInitKFid;
-        ar & mnMaxKFid;
-        ar & mnBigChangeIdx;
-        // Set of KeyFrames and MapPoints, in this version the set serializator is not working
-        //ar & mspKeyFrames;
-        //ar & mspMapPoints;
+        friend class boost::serialization::access;
 
-        ar & mvpBackupKeyFrames;
-        ar & mvpBackupMapPoints;
+        template <class Archive>
+        void serialize(Archive &ar, const unsigned int version)
+        {
+            ar &mnId;
+            ar &mnInitKFid;
+            ar &mnMaxKFid;
+            ar &mnBigChangeIdx;
+            // Set of KeyFrames and MapPoints, in this version the set serializator is not working
+            // ar & mspKeyFrames;
+            // ar & mspMapPoints;
 
-        ar & mvBackupKeyFrameOriginsId;
+            ar &mvpBackupKeyFrames;
+            ar &mvpBackupMapPoints;
 
-        ar & mnBackupKFinitialID;
-        ar & mnBackupKFlowerID;
+            ar &mvBackupKeyFrameOriginsId;
 
-        ar & mbImuInitialized;
-        ar & mbIsInertial;
-        ar & mbIMU_BA1;
-        ar & mbIMU_BA2;
+            ar &mnBackupKFinitialID;
+            ar &mnBackupKFlowerID;
 
-        ar & mnInitKFid;
-        ar & mnMaxKFid;
-        ar & mnLastLoopKFid;
-    }
+            ar &mbImuInitialized;
+            ar &mbIsInertial;
+            ar &mbIMU_BA1;
+            ar &mbIMU_BA2;
 
-public:
-    Map();
-    Map(int initKFid);
-    ~Map();
+            ar &mnInitKFid;
+            ar &mnMaxKFid;
+            ar &mnLastLoopKFid;
+        }
 
-    void AddKeyFrame(KeyFrame* pKF);
-    void AddMapPoint(MapPoint* pMP);
-    void EraseMapPoint(MapPoint* pMP);
-    void EraseKeyFrame(KeyFrame* pKF);
-    void SetReferenceMapPoints(const std::vector<MapPoint*> &vpMPs);
-    void InformNewBigChange();
-    int GetLastBigChangeIdx();
+    public:
+        Map();
+        Map(int initKFid);
+        ~Map();
 
-    std::vector<KeyFrame*> GetAllKeyFrames();
-    std::vector<MapPoint*> GetAllMapPoints();
-    std::vector<MapPoint*> GetReferenceMapPoints();
+        /**
+         * @brief 用来在地图中插入关键帧,同时更新关键帧的最大id
+         * 
+         * @param[in] pKF 
+         */
+        void AddKeyFrame(KeyFrame *pKF);
+        void AddMapPoint(MapPoint *pMP);
+        void EraseMapPoint(MapPoint *pMP);
+        void EraseKeyFrame(KeyFrame *pKF);
 
-    long unsigned int MapPointsInMap();
-    long unsigned  KeyFramesInMap();
+        /**
+         * @brief 设置参考地图点用于绘图显示局部地图点（红色）
+         * 
+         * @param[in] vpMPs 
+         */
+        void SetReferenceMapPoints(const std::vector<MapPoint *> &vpMPs);
+        void InformNewBigChange();
+        int GetLastBigChangeIdx();
 
-    long unsigned int GetId();
+        std::vector<KeyFrame *> GetAllKeyFrames();
+        std::vector<MapPoint *> GetAllMapPoints();
 
-    long unsigned int GetInitKFid();
-    void SetInitKFid(long unsigned int initKFif);
-    long unsigned int GetMaxKFid();
+        /**
+         * @brief 将会获取获取参考地图点
+         * 
+         * @return std::vector<MapPoint *> 
+         */
+        std::vector<MapPoint *> GetReferenceMapPoints();
 
-    KeyFrame* GetOriginKF();
+        /**
+         * @brief 获取地图点数目
+         * 
+         * @return long unsigned int 
+         */
+        long unsigned int MapPointsInMap();
 
-    void SetCurrentMap();
-    void SetStoredMap();
+        /**
+         * @brief 获取地图中的关键帧数目
+         * 
+         * @return long unsigned 
+         */
+        long unsigned KeyFramesInMap();
 
-    bool HasThumbnail();
-    bool IsInUse();
+        long unsigned int GetId();
 
-    void SetBad();
-    bool IsBad();
+        long unsigned int GetInitKFid();
+        void SetInitKFid(long unsigned int initKFif);
+        long unsigned int GetMaxKFid();
 
-    void clear();
+        KeyFrame *GetOriginKF();
 
-    int GetMapChangeIndex();
-    void IncreaseChangeIndex();
-    int GetLastMapChange();
-    void SetLastMapChange(int currentChangeId);
+        void SetCurrentMap();
+        void SetStoredMap();
 
-    void SetImuInitialized();
-    bool isImuInitialized();
+        bool HasThumbnail();
+        bool IsInUse();
 
-    void RotateMap(const cv::Mat &R);
-    void ApplyScaledRotation(const cv::Mat &R, const float s, const bool bScaledVel=false, const cv::Mat t=cv::Mat::zeros(cv::Size(1,3),CV_32F));
+        void SetBad();
+        bool IsBad();
 
-    void SetInertialSensor();
-    bool IsInertial();
-    void SetIniertialBA1();
-    void SetIniertialBA2();
-    bool GetIniertialBA1();
-    bool GetIniertialBA2();
+        void clear();
 
-    void PrintEssentialGraph();
-    bool CheckEssentialGraph();
-    void ChangeId(long unsigned int nId);
+        int GetMapChangeIndex();
+        void IncreaseChangeIndex();
+        int GetLastMapChange();
+        void SetLastMapChange(int currentChangeId);
 
-    unsigned int GetLowerKFID();
+        void SetImuInitialized();
+        bool isImuInitialized();
 
-    void PreSave(std::set<GeometricCamera*> &spCams);
-    void PostLoad(KeyFrameDatabase* pKFDB, ORBVocabulary* pORBVoc, map<long unsigned int, KeyFrame*>& mpKeyFrameId, map<unsigned int, GeometricCamera*> &mpCams);
+        /**
+         * @brief 是对关键帧、MapPoint施加旋转
+         * 
+         * @param[in] R 
+         */
+        void RotateMap(const cv::Mat &R);
 
-    void printReprojectionError(list<KeyFrame*> &lpLocalWindowKFs, KeyFrame* mpCurrentKF, string &name, string &name_folder);
+        /**
+         * @brief 对施加的旋转进行应用
+         * 
+         * @param[in] R 
+         * @param[in] s 
+         * @param[in] bScaledVel 
+         * @param[in] t 
+         */
+        void ApplyScaledRotation(const cv::Mat &R, const float s, const bool bScaledVel = false, const cv::Mat t = cv::Mat::zeros(cv::Size(1, 3), CV_32F));
 
-    vector<KeyFrame*> mvpKeyFrameOrigins;
-    vector<unsigned long int> mvBackupKeyFrameOriginsId;
-    KeyFrame* mpFirstRegionKF;
-    std::mutex mMutexMapUpdate;
+        void SetInertialSensor();
+        bool IsInertial();
+        void SetIniertialBA1();
+        void SetIniertialBA2();
+        bool GetIniertialBA1();
+        bool GetIniertialBA2();
 
-    // This avoid that two points are created simultaneously in separate threads (id conflict)
-    std::mutex mMutexPointCreation;
+        void PrintEssentialGraph();
 
-    bool mbFail;
+        /**
+         * @brief 通过两个for循环来检测第一个关键帧是否具有父代和子代
+         * 
+         * @return true 
+         * @return false 
+         */
+        bool CheckEssentialGraph();
+        void ChangeId(long unsigned int nId);
 
-    // Size of the thumbnail (always in power of 2)
-    static const int THUMB_WIDTH = 512;
-    static const int THUMB_HEIGHT = 512;
+        unsigned int GetLowerKFID();
 
-    static long unsigned int nNextId;
+        /**
+         * @brief 首先通过一个for循环来保存原始关键帧的id，接下来是将集合的容器备份到向量，来达到一个预存的目的。
+         * 
+         * @param[in] spCams 
+         */
+        void PreSave(std::set<GeometricCamera *> &spCams);
+        void PostLoad(KeyFrameDatabase *pKFDB, ORBVocabulary *pORBVoc, map<long unsigned int, KeyFrame *> &mpKeyFrameId, map<unsigned int, GeometricCamera *> &mpCams);
 
-protected:
+        void printReprojectionError(list<KeyFrame *> &lpLocalWindowKFs, KeyFrame *mpCurrentKF, string &name, string &name_folder);
 
-    long unsigned int mnId;
+        vector<KeyFrame *> mvpKeyFrameOrigins;
+        vector<unsigned long int> mvBackupKeyFrameOriginsId;
+        KeyFrame *mpFirstRegionKF;
+        std::mutex mMutexMapUpdate;
 
-    std::set<MapPoint*> mspMapPoints;
-    std::set<KeyFrame*> mspKeyFrames;
+        // This avoid that two points are created simultaneously in separate threads (id conflict)
+        std::mutex mMutexPointCreation;
 
-    std::vector<MapPoint*> mvpBackupMapPoints;
-    std::vector<KeyFrame*> mvpBackupKeyFrames;
+        bool mbFail;
 
-    KeyFrame* mpKFinitial;
-    KeyFrame* mpKFlowerID;
+        // Size of the thumbnail (always in power of 2)
+        static const int THUMB_WIDTH = 512;
+        static const int THUMB_HEIGHT = 512;
 
-    unsigned long int mnBackupKFinitialID;
-    unsigned long int mnBackupKFlowerID;
+        static long unsigned int nNextId;
 
-    std::vector<MapPoint*> mvpReferenceMapPoints;
+    protected:
+        long unsigned int mnId;
+        // 记录地图中的地图点
+        std::set<MapPoint *> mspMapPoints;
+        // 记录地图中的关键帧指针
+        std::set<KeyFrame *> mspKeyFrames;
 
-    bool mbImuInitialized;
+        std::vector<MapPoint *> mvpBackupMapPoints;
+        std::vector<KeyFrame *> mvpBackupKeyFrames;
 
-    int mnMapChange;
-    int mnMapChangeNotified;
+        KeyFrame *mpKFinitial;
+        KeyFrame *mpKFlowerID;
 
-    long unsigned int mnInitKFid;
-    long unsigned int mnMaxKFid;
-    long unsigned int mnLastLoopKFid;
+        unsigned long int mnBackupKFinitialID;
+        unsigned long int mnBackupKFlowerID;
 
-    // Index related to a big change in the map (loop closure, global BA)
-    int mnBigChangeIdx;
+        std::vector<MapPoint *> mvpReferenceMapPoints;
 
+        bool mbImuInitialized;
+        // ?
+        int mnMapChange;
+        // ？
+        int mnMapChangeNotified;
 
-    // View of the map in aerial sight (for the AtlasViewer)
-    GLubyte* mThumbnail;
+        long unsigned int mnInitKFid;
+        // 记录最大关键帧id
+        long unsigned int mnMaxKFid;
+        long unsigned int mnLastLoopKFid;
 
-    bool mIsInUse;
-    bool mHasTumbnail;
-    bool mbBad = false;
+        // Index related to a big change in the map (loop closure, global BA)
+        int mnBigChangeIdx;
 
-    bool mbIsInertial;             //标记是否有imu
-    bool mbIMU_BA1;
-    bool mbIMU_BA2;
+        // View of the map in aerial sight (for the AtlasViewer)
+        GLubyte *mThumbnail;
 
-    std::mutex mMutexMap;
-};
+        bool mIsInUse;
+        bool mHasTumbnail;
+        bool mbBad = false;
 
-} //namespace ORB_SLAM3
+        bool mbIsInertial; //标记是否有imu
+        bool mbIMU_BA1;
+        bool mbIMU_BA2;
+
+        std::mutex mMutexMap;
+    };
+
+} // namespace ORB_SLAM3
 
 #endif // MAP_H

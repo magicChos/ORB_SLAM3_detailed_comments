@@ -166,10 +166,13 @@ public:
     // Vector of keypoints (original for visualization) and undistorted (actually used by the system).
     // In the stereo case, mvKeysUn is redundant as images must be rectified.
     // In the RGB-D case, RGB images can be distorted.
+    // 关键点坐标
     std::vector<cv::KeyPoint> mvKeys, mvKeysRight;
+    // 无畸变的关键点坐标
     std::vector<cv::KeyPoint> mvKeysUn;
 
     // Corresponding stereo coordinate and depth for each keypoint.
+    // 每个关键点对应的立体坐标和深度
     std::vector<MapPoint*> mvpMapPoints;
     // "Monocular" keypoints have a negative value.
     std::vector<float> mvuRight;
@@ -218,6 +221,7 @@ public:
 
     // Current and Next Frame id.
     static long unsigned int nNextId;
+    // ?
     long unsigned int mnId;
 
     // Reference Keyframe.

@@ -301,11 +301,39 @@ public:
     void ComputeBoW();
 
     // Covisibility graph functions
+    /**
+     * @brief 添加共视关键帧
+     * 
+     * @param[in] pKF 
+     * @param[in] weight 
+     */
     void AddConnection(KeyFrame* pKF, const int &weight);
+
+    /**
+     * @brief 删除共视关键帧
+     * 
+     * @param[in] pKF 
+     */
     void EraseConnection(KeyFrame* pKF);
 
+    /**
+     * @brief 基于当前关键帧对地图点的观测构造共视图
+     * 
+     * @param[in] upParent 
+     */
     void UpdateConnections(bool upParent=true);
+
+    /**
+     * @brief 基于共视图信息修改对应变量
+     * 
+     */
     void UpdateBestCovisibles();
+
+    /**
+     * @brief 返回关联关键帧
+     * 
+     * @return std::set<KeyFrame *> 
+     */
     std::set<KeyFrame *> GetConnectedKeyFrames();
     std::vector<KeyFrame* > GetVectorCovisibleKeyFrames();
     std::vector<KeyFrame*> GetBestCovisibilityKeyFrames(const int &N);
@@ -390,6 +418,7 @@ public:
 public:
 
     static long unsigned int nNextId;
+    // 当前关键帧Id?
     long unsigned int mnId;
     const long unsigned int mnFrameId;
 
@@ -406,6 +435,7 @@ public:
     long unsigned int mnFuseTargetForKF;
 
     // Variables used by the local mapping
+    // ?
     long unsigned int mnBALocalForKF;
     long unsigned int mnBAFixedForKF;
 
@@ -537,8 +567,11 @@ protected:
     // Grid over the image to speed up feature matching
     std::vector< std::vector <std::vector<size_t> > > mGrid;
 
+    // 当前关键帧的共视关键帧及权重
     std::map<KeyFrame*,int> mConnectedKeyFrameWeights;
+    // 所有共视关键帧,按权重从大到小排序
     std::vector<KeyFrame*> mvpOrderedConnectedKeyFrames;
+    // 所有共视权重,按从大到小排序
     std::vector<int> mvOrderedWeights;
     // For save relation without pointer, this is necessary for save/load function
     std::map<long unsigned int, int> mBackupConnectedKeyFrameIdWeights;

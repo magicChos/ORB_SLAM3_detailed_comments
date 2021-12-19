@@ -1,20 +1,20 @@
 /**
-* This file is part of ORB-SLAM3
-*
-* Copyright (C) 2017-2020 Carlos Campos, Richard Elvira, Juan J. Gómez Rodríguez, José M.M. Montiel and Juan D. Tardós, University of Zaragoza.
-* Copyright (C) 2014-2016 Raúl Mur-Artal, José M.M. Montiel and Juan D. Tardós, University of Zaragoza.
-*
-* ORB-SLAM3 is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
-* License as published by the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* ORB-SLAM3 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
-* the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License along with ORB-SLAM3.
-* If not, see <http://www.gnu.org/licenses/>.
-*/
+ * This file is part of ORB-SLAM3
+ *
+ * Copyright (C) 2017-2020 Carlos Campos, Richard Elvira, Juan J. Gómez Rodríguez, José M.M. Montiel and Juan D. Tardós, University of Zaragoza.
+ * Copyright (C) 2014-2016 Raúl Mur-Artal, José M.M. Montiel and Juan D. Tardós, University of Zaragoza.
+ *
+ * ORB-SLAM3 is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * ORB-SLAM3 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with ORB-SLAM3.
+ * If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include "Tracking.h"
 
@@ -82,7 +82,7 @@ namespace ORB_SLAM3
 
         mbInitWith3KFs = false;
 
-        //Rectification parameters
+        // Rectification parameters
         /*mbNeedRectify = false;
     if((mSensor == System::STEREO || mSensor == System::IMU_STEREO) && sCameraName == "PinHole")
     {
@@ -141,7 +141,7 @@ namespace ORB_SLAM3
             }
         }
 
-        //f_track_stats.open("tracking_stats"+ _nameSeq + ".txt");
+        // f_track_stats.open("tracking_stats"+ _nameSeq + ".txt");
         /*f_track_stats.open("tracking_stats.txt");
     f_track_stats << "# timestamp, Num KF local, Num MP local, time" << endl;
     f_track_stats << fixed ;*/
@@ -155,7 +155,7 @@ namespace ORB_SLAM3
 
     Tracking::~Tracking()
     {
-        //f_track_stats.close();
+        // f_track_stats.close();
 #ifdef SAVE_TIMES
         f_track_times.close();
 #endif
@@ -1023,13 +1023,13 @@ namespace ORB_SLAM3
     }
 
     /**
- * @brief 输入单目图像，输出世界坐标系到该帧相机坐标系的变换矩阵
- * 
- * @param[in] im                单目图像
- * @param[in] timestamp         时间戳
- * @param[in] filename          文件名（调试用）
- * @return cv::Mat              世界坐标系到相机坐标系的变换矩阵
- */
+     * @brief 输入单目图像，输出世界坐标系到该帧相机坐标系的变换矩阵
+     *
+     * @param[in] im                单目图像
+     * @param[in] timestamp         时间戳
+     * @param[in] filename          文件名（调试用）
+     * @return cv::Mat              世界坐标系到相机坐标系的变换矩阵
+     */
     cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp, string filename)
     {
         mImGray = im;
@@ -1187,13 +1187,13 @@ namespace ORB_SLAM3
         IMU::Preintegrated *pImuPreintegratedFromLastFrame = new IMU::Preintegrated(mLastFrame.mImuBias, mCurrentFrame.mImuCalib);
         // 针对预积分位置的不同做不同中值积分的处理
         /**
-     *  根据上面imu帧的筛选，IMU与图像帧的时序如下：
-     *  Frame---IMU0---IMU1---IMU2---IMU3---IMU4---------------IMUx---Frame---IMUx+1
-     *  T_------T0-----T1-----T2-----T3-----T4-----------------Tx-----_T------Tx+1
-     *  A_------A0-----A1-----A2-----A3-----A4-----------------Ax-----_T------Ax+1
-     *  W_------W0-----W1-----W2-----W3-----W4-----------------Wx-----_T------Wx+1
-     *  T_和_T分别表示上一图像帧和当前图像帧的时间戳，A(加速度数据)，W(陀螺仪数据)，同理
-     */
+         *  根据上面imu帧的筛选，IMU与图像帧的时序如下：
+         *  Frame---IMU0---IMU1---IMU2---IMU3---IMU4---------------IMUx---Frame---IMUx+1
+         *  T_------T0-----T1-----T2-----T3-----T4-----------------Tx-----_T------Tx+1
+         *  A_------A0-----A1-----A2-----A3-----A4-----------------Ax-----_T------Ax+1
+         *  W_------W0-----W1-----W2-----W3-----W4-----------------Wx-----_T------Wx+1
+         *  T_和_T分别表示上一图像帧和当前图像帧的时间戳，A(加速度数据)，W(陀螺仪数据)，同理
+         */
         for (int i = 0; i < n; i++)
         {
             float tstep;
@@ -1269,14 +1269,14 @@ namespace ORB_SLAM3
     }
 
     /**
- * @brief 跟踪不成功的时候，用初始化好的imu数据做跟踪处理，通过IMU预测状态
- * 两个地方用到：
- * 1. 匀速模型计算速度,但并没有给当前帧位姿赋值；
- * 2. 跟踪丢失时不直接判定丢失，通过这个函数预测当前帧位姿看看能不能拽回来，代替纯视觉中的重定位
- * 
- * @return true 
- * @return false 
- */
+     * @brief 跟踪不成功的时候，用初始化好的imu数据做跟踪处理，通过IMU预测状态
+     * 两个地方用到：
+     * 1. 匀速模型计算速度,但并没有给当前帧位姿赋值；
+     * 2. 跟踪丢失时不直接判定丢失，通过这个函数预测当前帧位姿看看能不能拽回来，代替纯视觉中的重定位
+     *
+     * @return true
+     * @return false
+     */
     bool Tracking::PredictStateIMU()
     {
         if (!mCurrentFrame.mpPrevFrame)
@@ -1452,13 +1452,13 @@ namespace ORB_SLAM3
     }
 
     /**
- * @brief 跟踪过程，包括恒速模型跟踪、参考关键帧跟踪、局部地图跟踪
- * track包含两部分：估计运动、跟踪局部地图
- * 
- * Step 1：初始化
- * Step 2：跟踪
- * Step 3：记录位姿信息，用于轨迹复现
- */
+     * @brief 跟踪过程，包括恒速模型跟踪、参考关键帧跟踪、局部地图跟踪
+     * track包含两部分：估计运动、跟踪局部地图
+     *
+     * Step 1：初始化
+     * Step 2：跟踪
+     * Step 3：记录位姿信息，用于轨迹复现
+     */
     void Tracking::Track()
     {
 #ifdef SAVE_TIMES
@@ -1643,15 +1643,15 @@ namespace ORB_SLAM3
                     // mnLastRelocFrameId 上一次重定位的那一帧
                     if ((mVelocity.empty() && !pCurrentMap->isImuInitialized()) || mCurrentFrame.mnId < mnLastRelocFrameId + 2)
                     {
-                        //Verbose::PrintMess("TRACK: Track with respect to the reference KF ", Verbose::VERBOSITY_DEBUG);
+                        // Verbose::PrintMess("TRACK: Track with respect to the reference KF ", Verbose::VERBOSITY_DEBUG);
                         bOK = TrackReferenceKeyFrame();
                     }
                     else
                     {
-                        //Verbose::PrintMess("TRACK: Track with motion model", Verbose::VERBOSITY_DEBUG);
-                        // 用恒速模型跟踪。所谓的恒速就是假设上上帧到上一帧的位姿=上一帧的位姿到当前帧位姿
-                        // 根据恒速模型设定当前帧的初始位姿，用最近的普通帧来跟踪当前的普通帧
-                        // 通过投影的方式在参考帧中找当前帧特征点的匹配点，优化每个特征点所对应3D点的投影误差即可得到位姿
+                        // Verbose::PrintMess("TRACK: Track with motion model", Verbose::VERBOSITY_DEBUG);
+                        //  用恒速模型跟踪。所谓的恒速就是假设上上帧到上一帧的位姿=上一帧的位姿到当前帧位姿
+                        //  根据恒速模型设定当前帧的初始位姿，用最近的普通帧来跟踪当前的普通帧
+                        //  通过投影的方式在参考帧中找当前帧特征点的匹配点，优化每个特征点所对应3D点的投影误差即可得到位姿
                         bOK = TrackWithMotionModel();
                         if (!bOK)
                             //根据恒速模型失败了，只能根据参考关键帧来跟踪
@@ -1676,7 +1676,7 @@ namespace ORB_SLAM3
                             cout << "KF in map: " << pCurrentMap->KeyFramesInMap() << endl;
                             mState = RECENTLY_LOST;
                             mTimeStampLost = mCurrentFrame.mTimeStamp;
-                            //mCurrentFrame.SetPose(mLastFrame.mTcw);
+                            // mCurrentFrame.SetPose(mLastFrame.mTcw);
                         }
                         else
                         {
@@ -2303,7 +2303,9 @@ namespace ORB_SLAM3
                 return;
             }
 
-            cv::Mat Rcw;                 // Current Camera Rotation
+            // 记录世界坐标系到当前相机坐标系的变换
+            cv::Mat Rcw; // Current Camera Rotation
+            // 记录世界坐标系到当前相机坐标系的平移
             cv::Mat tcw;                 // Current Camera Translation
             vector<bool> vbTriangulated; // Triangulated Correspondences (mvIniMatches)
 
@@ -2354,7 +2356,7 @@ namespace ORB_SLAM3
             if (mvIniMatches[i] < 0)
                 continue;
 
-            //Create MapPoint.
+            // Create MapPoint.
             cv::Mat worldPos(mvIniP3D[i]);
             MapPoint *pMP = new MapPoint(worldPos, pKFcur, mpAtlas->GetCurrentMap());
 
@@ -2367,11 +2369,11 @@ namespace ORB_SLAM3
             pMP->ComputeDistinctiveDescriptors();
             pMP->UpdateNormalAndDepth();
 
-            //Fill Current Frame structure
+            // Fill Current Frame structure
             mCurrentFrame.mvpMapPoints[mvIniMatches[i]] = pMP;
             mCurrentFrame.mvbOutlier[mvIniMatches[i]] = false;
 
-            //Add to Map
+            // Add to Map
             mpAtlas->AddMapPoint(pMP);
         }
 
@@ -2546,7 +2548,7 @@ namespace ORB_SLAM3
         mCurrentFrame.mvpMapPoints = vpMapPointMatches;
         mCurrentFrame.SetPose(mLastFrame.mTcw);
 
-        //mCurrentFrame.PrintPointDistribution();
+        // mCurrentFrame.PrintPointDistribution();
 
         // cout << " TrackReferenceKeyFrame mLastFrame.mTcw:  " << mLastFrame.mTcw << endl;
         Optimizer::PoseOptimization(&mCurrentFrame);
@@ -2555,7 +2557,7 @@ namespace ORB_SLAM3
         int nmatchesMap = 0;
         for (int i = 0; i < mCurrentFrame.N; i++)
         {
-            //if(i >= mCurrentFrame.Nleft) break;
+            // if(i >= mCurrentFrame.Nleft) break;
             if (mCurrentFrame.mvpMapPoints[i])
             {
                 if (mCurrentFrame.mvbOutlier[i])
@@ -2959,7 +2961,7 @@ namespace ORB_SLAM3
         const bool c1a = mCurrentFrame.mnId >= mnLastKeyFrameId + mMaxFrames;
         // Condition 1b: More than "MinFrames" have passed and Local Mapping is idle
         const bool c1b = ((mCurrentFrame.mnId >= mnLastKeyFrameId + mMinFrames) && bLocalMappingIdle);
-        //Condition 1c: tracking is weak
+        // Condition 1c: tracking is weak
         const bool c1c = mSensor != System::MONOCULAR && mSensor != System::IMU_MONOCULAR && mSensor != System::IMU_STEREO && (mnMatchesInliers < nRefMatches * 0.25 || bNeedToInsertClose);
         // Condition 2: Few tracked points compared to reference keyframe. Lots of visual odometry compared to map matches.
         const bool c2 = (((mnMatchesInliers < nRefMatches * thRefRatio || bNeedToInsertClose)) && mnMatchesInliers > 15);
@@ -2968,7 +2970,7 @@ namespace ORB_SLAM3
         bool c3 = false;
         if (mpLastKeyFrame)
         {
-            //imu模式下超过0.5s之后则c3为true
+            // imu模式下超过0.5s之后则c3为true
             if (mSensor == System::IMU_MONOCULAR)
             {
                 if ((mCurrentFrame.mTimeStamp - mpLastKeyFrame->mTimeStamp) >= 0.5)
@@ -3105,8 +3107,8 @@ namespace ORB_SLAM3
                         MapPoint *pNewMP = new MapPoint(x3D, pKF, mpAtlas->GetCurrentMap());
                         pNewMP->AddObservation(pKF, i);
 
-                        //Check if it is a stereo observation in order to not
-                        //duplicate mappoints
+                        // Check if it is a stereo observation in order to not
+                        // duplicate mappoints
                         if (mCurrentFrame.Nleft != -1 && mCurrentFrame.mvLeftToRightMatch[i] >= 0)
                         {
                             mCurrentFrame.mvpMapPoints[mCurrentFrame.Nleft + mCurrentFrame.mvLeftToRightMatch[i]] = pNewMP;
@@ -3143,7 +3145,7 @@ namespace ORB_SLAM3
 
         mnLastKeyFrameId = mCurrentFrame.mnId;
         mpLastKeyFrame = pKF;
-        //cout  << "end creating new KF" << endl;
+        // cout  << "end creating new KF" << endl;
     }
 
     void Tracking::SearchLocalPoints()
@@ -3387,7 +3389,7 @@ namespace ORB_SLAM3
         // Add 10 last temporal KFs (mainly for IMU)
         if ((mSensor == System::IMU_MONOCULAR || mSensor == System::IMU_STEREO) && mvpLocalKeyFrames.size() < 80)
         {
-            //cout << "CurrentKF: " << mCurrentFrame.mnId << endl;
+            // cout << "CurrentKF: " << mCurrentFrame.mnId << endl;
             KeyFrame *tempKeyFrame = mCurrentFrame.mpLastKeyFrame;
 
             const int Nd = 20;
@@ -3395,7 +3397,7 @@ namespace ORB_SLAM3
             {
                 if (!tempKeyFrame)
                     break;
-                //cout << "tempKF: " << tempKeyFrame << endl;
+                // cout << "tempKF: " << tempKeyFrame << endl;
                 if (tempKeyFrame->mnTrackReferenceForFrame != mCurrentFrame.mnId)
                 {
                     mvpLocalKeyFrames.push_back(tempKeyFrame);
@@ -3731,11 +3733,11 @@ namespace ORB_SLAM3
         // Clear Map (this erase MapPoints and KeyFrames)
         mpAtlas->clearMap();
 
-        //KeyFrame::nNextId = mpAtlas->GetLastInitKFid();
-        //Frame::nNextId = mnLastInitFrameId;
+        // KeyFrame::nNextId = mpAtlas->GetLastInitKFid();
+        // Frame::nNextId = mnLastInitFrameId;
         mnLastInitFrameId = Frame::nNextId;
         mnLastRelocFrameId = mnLastInitFrameId;
-        mState = NO_IMAGES_YET; //NOT_INITIALIZED;
+        mState = NO_IMAGES_YET; // NOT_INITIALIZED;
 
         if (mpInitializer)
         {
@@ -3756,7 +3758,7 @@ namespace ORB_SLAM3
             }
         }
 
-        //cout << "First Frame id: " << index << endl;
+        // cout << "First Frame id: " << index << endl;
         int num_lost = 0;
         cout << "mnInitialFrameId = " << mnInitialFrameId << endl;
 
@@ -4065,11 +4067,11 @@ namespace ORB_SLAM3
                     x3D = pKF2->UnprojectStereo(idx2);
                 }
                 else
-                    continue; //No stereo and very low parallax
+                    continue; // No stereo and very low parallax
 
                 cv::Mat x3Dt = x3D.t();
 
-                //Check triangulation in front of cameras
+                // Check triangulation in front of cameras
                 float z1 = Rcw1.row(2).dot(x3Dt) + tcw1.at<float>(2);
                 if (z1 <= 0)
                     continue;
@@ -4078,7 +4080,7 @@ namespace ORB_SLAM3
                 if (z2 <= 0)
                     continue;
 
-                //Check reprojection error in first keyframe
+                // Check reprojection error in first keyframe
                 const float &sigmaSquare1 = mpLastKeyFrame->mvLevelSigma2[kp1.octave];
                 const float x1 = Rcw1.row(0).dot(x3Dt) + tcw1.at<float>(0);
                 const float y1 = Rcw1.row(1).dot(x3Dt) + tcw1.at<float>(1);
@@ -4105,7 +4107,7 @@ namespace ORB_SLAM3
                         continue;
                 }
 
-                //Check reprojection error in second keyframe
+                // Check reprojection error in second keyframe
                 const float sigmaSquare2 = pKF2->mvLevelSigma2[kp2.octave];
                 const float x2 = Rcw2.row(0).dot(x3Dt) + tcw2.at<float>(0);
                 const float y2 = Rcw2.row(1).dot(x3Dt) + tcw2.at<float>(1);
@@ -4131,7 +4133,7 @@ namespace ORB_SLAM3
                         continue;
                 }
 
-                //Check scale consistency
+                // Check scale consistency
                 cv::Mat normal1 = x3D - Ow1;
                 float dist1 = cv::norm(normal1);
 
@@ -4182,4 +4184,4 @@ namespace ORB_SLAM3
         return mnMatchesInliers;
     }
 
-} //namespace ORB_SLAM
+} // namespace ORB_SLAM
