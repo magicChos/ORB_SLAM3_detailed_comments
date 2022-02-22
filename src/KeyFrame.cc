@@ -20,33 +20,31 @@
 #include "Converter.h"
 #include "ORBmatcher.h"
 #include "ImuTypes.h"
-#include<mutex>
+#include <mutex>
 
-namespace ORB_SLAM3
+namespace ORB_SLAM3 {
+
+long unsigned int KeyFrame::nNextId = 0;
+
+KeyFrame::KeyFrame() :
+    mnFrameId(0), mTimeStamp(0), mnGridCols(FRAME_GRID_COLS), mnGridRows(FRAME_GRID_ROWS),
+    mfGridElementWidthInv(0), mfGridElementHeightInv(0),
+    mnTrackReferenceForFrame(0), mnFuseTargetForKF(0), mnBALocalForKF(0), mnBAFixedForKF(0), mnBALocalForMerge(0),
+    mnLoopQuery(0), mnLoopWords(0), mnRelocQuery(0), mnRelocWords(0), mnMergeQuery(0), mnMergeWords(0), mnBAGlobalForKF(0),
+    fx(0), fy(0), cx(0), cy(0), invfx(0), invfy(0), mnPlaceRecognitionQuery(0), mnPlaceRecognitionWords(0), mPlaceRecognitionScore(0),
+    mbf(0), mb(0), mThDepth(0), N(0), mvKeys(static_cast<vector<cv::KeyPoint>>(NULL)), mvKeysUn(static_cast<vector<cv::KeyPoint>>(NULL)),
+    mvuRight(static_cast<vector<float>>(NULL)), mvDepth(static_cast<vector<float>>(NULL)), /*mDescriptors(NULL),*/
+    /*mBowVec(NULL), mFeatVec(NULL),*/ mnScaleLevels(0), mfScaleFactor(0),
+    mfLogScaleFactor(0), mvScaleFactors(0), mvLevelSigma2(0),
+    mvInvLevelSigma2(0), mnMinX(0), mnMinY(0), mnMaxX(0),
+    mnMaxY(0), /*mK(NULL),*/ mPrevKF(static_cast<KeyFrame *>(NULL)), mNextKF(static_cast<KeyFrame *>(NULL)), mbFirstConnection(true), mpParent(NULL), mbNotErase(false),
+    mbToBeErased(false), mbBad(false), mHalfBaseline(0), mbCurrentPlaceRecognition(false), mbHasHessian(false), mnMergeCorrectedForKF(0),
+    NLeft(0), NRight(0), mnNumberOfOpt(0)
 {
-
-long unsigned int KeyFrame::nNextId=0;
-
-KeyFrame::KeyFrame():
-        mnFrameId(0),  mTimeStamp(0), mnGridCols(FRAME_GRID_COLS), mnGridRows(FRAME_GRID_ROWS),
-        mfGridElementWidthInv(0), mfGridElementHeightInv(0),
-        mnTrackReferenceForFrame(0), mnFuseTargetForKF(0), mnBALocalForKF(0), mnBAFixedForKF(0), mnBALocalForMerge(0),
-        mnLoopQuery(0), mnLoopWords(0), mnRelocQuery(0), mnRelocWords(0), mnMergeQuery(0), mnMergeWords(0), mnBAGlobalForKF(0),
-        fx(0), fy(0), cx(0), cy(0), invfx(0), invfy(0), mnPlaceRecognitionQuery(0), mnPlaceRecognitionWords(0), mPlaceRecognitionScore(0),
-        mbf(0), mb(0), mThDepth(0), N(0), mvKeys(static_cast<vector<cv::KeyPoint> >(NULL)), mvKeysUn(static_cast<vector<cv::KeyPoint> >(NULL)),
-        mvuRight(static_cast<vector<float> >(NULL)), mvDepth(static_cast<vector<float> >(NULL)), /*mDescriptors(NULL),*/
-        /*mBowVec(NULL), mFeatVec(NULL),*/ mnScaleLevels(0), mfScaleFactor(0),
-        mfLogScaleFactor(0), mvScaleFactors(0), mvLevelSigma2(0),
-        mvInvLevelSigma2(0), mnMinX(0), mnMinY(0), mnMaxX(0),
-        mnMaxY(0), /*mK(NULL),*/  mPrevKF(static_cast<KeyFrame*>(NULL)), mNextKF(static_cast<KeyFrame*>(NULL)), mbFirstConnection(true), mpParent(NULL), mbNotErase(false),
-        mbToBeErased(false), mbBad(false), mHalfBaseline(0), mbCurrentPlaceRecognition(false), mbHasHessian(false), mnMergeCorrectedForKF(0),
-        NLeft(0),NRight(0), mnNumberOfOpt(0)
-{
-
 }
 
-KeyFrame::KeyFrame(Frame &F, Map *pMap, KeyFrameDatabase *pKFDB):
-    bImu(pMap->isImuInitialized()), mnFrameId(F.mnId),  mTimeStamp(F.mTimeStamp), mnGridCols(FRAME_GRID_COLS), mnGridRows(FRAME_GRID_ROWS),
+KeyFrame::KeyFrame(Frame &F, Map *pMap, KeyFrameDatabase *pKFDB) :
+    bImu(pMap->isImuInitialized()), mnFrameId(F.mnId), mTimeStamp(F.mTimeStamp), mnGridCols(FRAME_GRID_COLS), mnGridRows(FRAME_GRID_ROWS),
     mfGridElementWidthInv(F.mfGridElementWidthInv), mfGridElementHeightInv(F.mfGridElementHeightInv),
     mnTrackReferenceForFrame(0), mnFuseTargetForKF(0), mnBALocalForKF(0), mnBAFixedForKF(0), mnBALocalForMerge(0),
     mnLoopQuery(0), mnLoopWords(0), mnRelocQuery(0), mnRelocWords(0), mnBAGlobalForKF(0), mnPlaceRecognitionQuery(0), mnPlaceRecognitionWords(0), mPlaceRecognitionScore(0),
@@ -59,36 +57,37 @@ KeyFrame::KeyFrame(Frame &F, Map *pMap, KeyFrameDatabase *pKFDB):
     mnMaxY(F.mnMaxY), mK(F.mK), mPrevKF(NULL), mNextKF(NULL), mpImuPreintegrated(F.mpImuPreintegrated),
     mImuCalib(F.mImuCalib), mvpMapPoints(F.mvpMapPoints), mpKeyFrameDB(pKFDB),
     mpORBvocabulary(F.mpORBvocabulary), mbFirstConnection(true), mpParent(NULL), mDistCoef(F.mDistCoef), mbNotErase(false), mnDataset(F.mnDataset),
-    mbToBeErased(false), mbBad(false), mHalfBaseline(F.mb/2), mpMap(pMap), mbCurrentPlaceRecognition(false), mNameFile(F.mNameFile), mbHasHessian(false), mnMergeCorrectedForKF(0),
+    mbToBeErased(false), mbBad(false), mHalfBaseline(F.mb / 2), mpMap(pMap), mbCurrentPlaceRecognition(false), mNameFile(F.mNameFile), mbHasHessian(false), mnMergeCorrectedForKF(0),
     mpCamera(F.mpCamera), mpCamera2(F.mpCamera2),
-    mvLeftToRightMatch(F.mvLeftToRightMatch),mvRightToLeftMatch(F.mvRightToLeftMatch),mTlr(F.mTlr.clone()),
+    mvLeftToRightMatch(F.mvLeftToRightMatch), mvRightToLeftMatch(F.mvRightToLeftMatch), mTlr(F.mTlr.clone()),
     mvKeysRight(F.mvKeysRight), NLeft(F.Nleft), NRight(F.Nright), mTrl(F.mTrl), mnNumberOfOpt(0)
 {
-
     imgLeft = F.imgLeft.clone();
     imgRight = F.imgRight.clone();
 
-    mnId=nNextId++;
+    mnId = nNextId++;
 
     // 根据指定的普通帧, 初始化用于加速匹配的网格对象信息; 其实就把每个网格中有的特征点的索引复制过来
     mGrid.resize(mnGridCols);
-    if(F.Nleft != -1)  mGridRight.resize(mnGridCols);
-    for(int i=0; i<mnGridCols;i++)
+    if (F.Nleft != -1)
+        mGridRight.resize(mnGridCols);
+    for (int i = 0; i < mnGridCols; i++)
     {
         mGrid[i].resize(mnGridRows);
-        if(F.Nleft != -1) mGridRight[i].resize(mnGridRows);
-        for(int j=0; j<mnGridRows; j++){
+        if (F.Nleft != -1)
+            mGridRight[i].resize(mnGridRows);
+        for (int j = 0; j < mnGridRows; j++)
+        {
             mGrid[i][j] = F.mGrid[i][j];
-            if(F.Nleft != -1){
+            if (F.Nleft != -1)
+            {
                 mGridRight[i][j] = F.mGridRight[i][j];
             }
         }
     }
 
-
-
-    if(F.mVw.empty())
-        Vw = cv::Mat::zeros(3,1,CV_32F);
+    if (F.mVw.empty())
+        Vw = cv::Mat::zeros(3, 1, CV_32F);
     else
         Vw = F.mVw.clone();
 
@@ -101,12 +100,12 @@ KeyFrame::KeyFrame(Frame &F, Map *pMap, KeyFrameDatabase *pKFDB):
 void KeyFrame::ComputeBoW()
 {
     // 只有当词袋向量或者节点和特征序号的特征向量为空的时候执行
-    if(mBowVec.empty() || mFeatVec.empty())
+    if (mBowVec.empty() || mFeatVec.empty())
     {
         vector<cv::Mat> vCurrentDesc = Converter::toDescriptorVector(mDescriptors);
         // Feature vector associate features with nodes in the 4th level (from leaves up)
         // We assume the vocabulary tree has 6 levels, change the 4 otherwise
-        mpORBvocabulary->transform(vCurrentDesc,mBowVec,mFeatVec,4);
+        mpORBvocabulary->transform(vCurrentDesc, mBowVec, mFeatVec, 4);
     }
 }
 
@@ -115,24 +114,24 @@ void KeyFrame::SetPose(const cv::Mat &Tcw_)
 {
     unique_lock<mutex> lock(mMutexPose);
     Tcw_.copyTo(Tcw);
-    cv::Mat Rcw = Tcw.rowRange(0,3).colRange(0,3);
-    cv::Mat tcw = Tcw.rowRange(0,3).col(3);
+    cv::Mat Rcw = Tcw.rowRange(0, 3).colRange(0, 3);
+    cv::Mat tcw = Tcw.rowRange(0, 3).col(3);
     cv::Mat Rwc = Rcw.t();
-    Ow = -Rwc*tcw;
+    Ow = -Rwc * tcw;
     if (!mImuCalib.Tcb.empty())
-        Owb = Rwc*mImuCalib.Tcb.rowRange(0,3).col(3)+Ow;
+        Owb = Rwc * mImuCalib.Tcb.rowRange(0, 3).col(3) + Ow;
 
     // 计算当前位姿的逆
-    Twc = cv::Mat::eye(4,4,Tcw.type());
-    Rwc.copyTo(Twc.rowRange(0,3).colRange(0,3));
-    Ow.copyTo(Twc.rowRange(0,3).col(3));
+    Twc = cv::Mat::eye(4, 4, Tcw.type());
+    Rwc.copyTo(Twc.rowRange(0, 3).colRange(0, 3));
+    Ow.copyTo(Twc.rowRange(0, 3).col(3));
 
     // center为相机坐标系（左目）下，立体相机中心的坐标
     // 立体相机中心点坐标与左目相机坐标之间只是在x轴上相差mHalfBaseline,
     // 因此可以看出，立体相机中两个摄像头的连线为x轴，正方向为左目相机指向右目相机 (齐次坐标)
-    cv::Mat center = (cv::Mat_<float>(4,1) << mHalfBaseline, 0 , 0, 1);
+    cv::Mat center = (cv::Mat_<float>(4, 1) << mHalfBaseline, 0, 0, 1);
     // 世界坐标系下，左目相机中心到立体相机中心的向量，方向由左目相机指向立体相机中心
-    Cw = Twc*center;
+    Cw = Twc * center;
 }
 
 void KeyFrame::SetVelocity(const cv::Mat &Vw_)
@@ -178,26 +177,26 @@ cv::Mat KeyFrame::GetImuPosition()
 cv::Mat KeyFrame::GetImuRotation()
 {
     unique_lock<mutex> lock(mMutexPose);
-    return Twc.rowRange(0,3).colRange(0,3)*mImuCalib.Tcb.rowRange(0,3).colRange(0,3);
+    return Twc.rowRange(0, 3).colRange(0, 3) * mImuCalib.Tcb.rowRange(0, 3).colRange(0, 3);
 }
 
 cv::Mat KeyFrame::GetImuPose()
 {
     unique_lock<mutex> lock(mMutexPose);
-    return Twc*mImuCalib.Tcb;
+    return Twc * mImuCalib.Tcb;
 }
 
 cv::Mat KeyFrame::GetRotation()
 {
     unique_lock<mutex> lock(mMutexPose);
-    return Tcw.rowRange(0,3).colRange(0,3).clone();
+    return Tcw.rowRange(0, 3).colRange(0, 3).clone();
 }
 
 // 获取位置
 cv::Mat KeyFrame::GetTranslation()
 {
     unique_lock<mutex> lock(mMutexPose);
-    return Tcw.rowRange(0,3).col(3).clone();
+    return Tcw.rowRange(0, 3).col(3).clone();
 }
 
 cv::Mat KeyFrame::GetVelocity()
@@ -214,10 +213,10 @@ void KeyFrame::AddConnection(KeyFrame *pKF, const int &weight)
 
         // 判断当前关键帧是否已经和其他的关键帧创建了联系
         // std::map::count函数只可能返回0或1两种情况
-        if(!mConnectedKeyFrameWeights.count(pKF)) // count函数返回0，mConnectedKeyFrameWeights中没有pKF，之前没有连接
-            mConnectedKeyFrameWeights[pKF]=weight;
-        else if(mConnectedKeyFrameWeights[pKF]!=weight) // 之前连接的权重不一样，更新
-            mConnectedKeyFrameWeights[pKF]=weight;
+        if (!mConnectedKeyFrameWeights.count(pKF)) // count函数返回0，mConnectedKeyFrameWeights中没有pKF，之前没有连接
+            mConnectedKeyFrameWeights[pKF] = weight;
+        else if (mConnectedKeyFrameWeights[pKF] != weight) // 之前连接的权重不一样，更新
+            mConnectedKeyFrameWeights[pKF] = weight;
         else
             return;
     }
@@ -234,19 +233,19 @@ void KeyFrame::AddConnection(KeyFrame *pKF, const int &weight)
 void KeyFrame::UpdateBestCovisibles()
 {
     unique_lock<mutex> lock(mMutexConnections);
-    vector<pair<int,KeyFrame*> > vPairs;
+    vector<pair<int, KeyFrame *>> vPairs;
     vPairs.reserve(mConnectedKeyFrameWeights.size());
     // 取出所有连接的关键帧，mConnectedKeyFrameWeights的类型为std::map<KeyFrame*,int>，而vPairs变量将共视的3D点数放在前面，利于排序
-    for(map<KeyFrame*,int>::iterator mit=mConnectedKeyFrameWeights.begin(), mend=mConnectedKeyFrameWeights.end(); mit!=mend; mit++)
-       vPairs.push_back(make_pair(mit->second,mit->first));
+    for (map<KeyFrame *, int>::iterator mit = mConnectedKeyFrameWeights.begin(), mend = mConnectedKeyFrameWeights.end(); mit != mend; mit++)
+        vPairs.push_back(make_pair(mit->second, mit->first));
 
     // 按照权重进行排序（默认是从小到大）
-    sort(vPairs.begin(),vPairs.end());
+    sort(vPairs.begin(), vPairs.end());
 
     // 为什么要用链表保存？因为插入和删除操作方便，只需要修改上一节点位置，不需要移动其他元素
-    list<KeyFrame*> lKFs; // keyframe
-    list<int> lWs; // weight
-    for(size_t i=0, iend=vPairs.size(); i<iend;i++)
+    list<KeyFrame *> lKFs; // keyframe
+    list<int> lWs;         // weight
+    for (size_t i = 0, iend = vPairs.size(); i < iend; i++)
     {
         // push_front 后变成从大到小
         lKFs.push_front(vPairs[i].second);
@@ -254,66 +253,65 @@ void KeyFrame::UpdateBestCovisibles()
     }
 
     // 权重从大到小
-    mvpOrderedConnectedKeyFrames = vector<KeyFrame*>(lKFs.begin(),lKFs.end());
+    mvpOrderedConnectedKeyFrames = vector<KeyFrame *>(lKFs.begin(), lKFs.end());
     mvOrderedWeights = vector<int>(lWs.begin(), lWs.end());
 }
 
 // 得到与该关键帧连接（>15个共视地图点）的关键帧(没有排序的)
-set<KeyFrame*> KeyFrame::GetConnectedKeyFrames()
+set<KeyFrame *> KeyFrame::GetConnectedKeyFrames()
 {
     unique_lock<mutex> lock(mMutexConnections);
-    set<KeyFrame*> s;
-    for(map<KeyFrame*,int>::iterator mit=mConnectedKeyFrameWeights.begin();mit!=mConnectedKeyFrameWeights.end();mit++)
+    set<KeyFrame *> s;
+    for (map<KeyFrame *, int>::iterator mit = mConnectedKeyFrameWeights.begin(); mit != mConnectedKeyFrameWeights.end(); mit++)
         s.insert(mit->first);
     return s;
 }
 
 // 得到与该关键帧连接的关键帧(已按权值排序)
-vector<KeyFrame*> KeyFrame::GetVectorCovisibleKeyFrames()
+vector<KeyFrame *> KeyFrame::GetVectorCovisibleKeyFrames()
 {
     unique_lock<mutex> lock(mMutexConnections);
     return mvpOrderedConnectedKeyFrames;
 }
 
 // 得到与该关键帧连接的前N个关键帧(已按权值排序)
-vector<KeyFrame*> KeyFrame::GetBestCovisibilityKeyFrames(const int &N)
+vector<KeyFrame *> KeyFrame::GetBestCovisibilityKeyFrames(const int &N)
 {
     unique_lock<mutex> lock(mMutexConnections);
-    if((int)mvpOrderedConnectedKeyFrames.size()<N)
+    if ((int)mvpOrderedConnectedKeyFrames.size() < N)
         // 如果不够达到的数目就直接吧现在所有的关键帧都返回了
         return mvpOrderedConnectedKeyFrames;
     else
-        return vector<KeyFrame*>(mvpOrderedConnectedKeyFrames.begin(),mvpOrderedConnectedKeyFrames.begin()+N);
-
+        return vector<KeyFrame *>(mvpOrderedConnectedKeyFrames.begin(), mvpOrderedConnectedKeyFrames.begin() + N);
 }
 
 // 得到与该关键帧连接的权重大于等于w的关键帧
-vector<KeyFrame*> KeyFrame::GetCovisiblesByWeight(const int &w)
+vector<KeyFrame *> KeyFrame::GetCovisiblesByWeight(const int &w)
 {
     unique_lock<mutex> lock(mMutexConnections);
 
     // 如果没有和当前关键帧连接的关键帧
-    if(mvpOrderedConnectedKeyFrames.empty())
+    if (mvpOrderedConnectedKeyFrames.empty())
     {
-        return vector<KeyFrame*>();
+        return vector<KeyFrame *>();
     }
 
     // 从mvOrderedWeights找出第一个大于w的那个迭代器
-    vector<int>::iterator it = upper_bound( mvOrderedWeights.begin(),   //起点
-                                            mvOrderedWeights.end(),     //终点
-                                            w,                          //目标阈值
-                                            KeyFrame::weightComp);      //比较函数,由于我们这里从大到小排序,所以需要重定义比较函数
-    
+    vector<int>::iterator it = upper_bound(mvOrderedWeights.begin(), //起点
+                                           mvOrderedWeights.end(),   //终点
+                                           w,                        //目标阈值
+                                           KeyFrame::weightComp);    //比较函数,由于我们这里从大到小排序,所以需要重定义比较函数
+
     // 如果没有找到(最大的权重也比给定的阈值小)
-    if(it==mvOrderedWeights.end() && mvOrderedWeights.back() < w)
+    if (it == mvOrderedWeights.end() && mvOrderedWeights.back() < w)
     {
-        return vector<KeyFrame*>();
+        return vector<KeyFrame *>();
     }
     else
     {
-        int n = it-mvOrderedWeights.begin();
+        int n = it - mvOrderedWeights.begin();
         //cout << "n = " << n << endl;
-        return vector<KeyFrame*>(mvpOrderedConnectedKeyFrames.begin(), mvpOrderedConnectedKeyFrames.begin()+n);
+        return vector<KeyFrame *>(mvpOrderedConnectedKeyFrames.begin(), mvpOrderedConnectedKeyFrames.begin() + n);
     }
 }
 
@@ -321,7 +319,7 @@ vector<KeyFrame*> KeyFrame::GetCovisiblesByWeight(const int &w)
 int KeyFrame::GetWeight(KeyFrame *pKF)
 {
     unique_lock<mutex> lock(mMutexConnections);
-    if(mConnectedKeyFrameWeights.count(pKF))
+    if (mConnectedKeyFrameWeights.count(pKF))
         return mConnectedKeyFrameWeights[pKF];
     else
         // 没有连接的话权重也就是共视点个数就是0
@@ -332,9 +330,9 @@ int KeyFrame::GetNumberMPs()
 {
     unique_lock<mutex> lock(mMutexFeatures);
     int numberMPs = 0;
-    for(size_t i=0, iend=mvpMapPoints.size(); i<iend; i++)
+    for (size_t i = 0, iend = mvpMapPoints.size(); i < iend; i++)
     {
-        if(!mvpMapPoints[i])
+        if (!mvpMapPoints[i])
             continue;
         numberMPs++;
     }
@@ -344,7 +342,7 @@ int KeyFrame::GetNumberMPs()
 void KeyFrame::AddMapPoint(MapPoint *pMP, const size_t &idx)
 {
     unique_lock<mutex> lock(mMutexFeatures);
-    mvpMapPoints[idx]=pMP;
+    mvpMapPoints[idx] = pMP;
 }
 
 /**
@@ -355,38 +353,38 @@ void KeyFrame::AddMapPoint(MapPoint *pMP, const size_t &idx)
 void KeyFrame::EraseMapPointMatch(const int &idx)
 {
     unique_lock<mutex> lock(mMutexFeatures);
-    mvpMapPoints[idx]=static_cast<MapPoint*>(NULL);
+    mvpMapPoints[idx] = static_cast<MapPoint *>(NULL);
 }
 
-void KeyFrame::EraseMapPointMatch(MapPoint* pMP)
+void KeyFrame::EraseMapPointMatch(MapPoint *pMP)
 {
-    tuple<size_t,size_t> indexes = pMP->GetIndexInKeyFrame(this);
+    tuple<size_t, size_t> indexes = pMP->GetIndexInKeyFrame(this);
     size_t leftIndex = get<0>(indexes), rightIndex = get<1>(indexes);
-    if(leftIndex != -1)
-        mvpMapPoints[leftIndex]=static_cast<MapPoint*>(NULL);
-    if(rightIndex != -1)
-        mvpMapPoints[rightIndex]=static_cast<MapPoint*>(NULL);
+    if (leftIndex != -1)
+        mvpMapPoints[leftIndex] = static_cast<MapPoint *>(NULL);
+    if (rightIndex != -1)
+        mvpMapPoints[rightIndex] = static_cast<MapPoint *>(NULL);
 }
 
 // 地图点的替换
-void KeyFrame::ReplaceMapPointMatch(const int &idx, MapPoint* pMP)
+void KeyFrame::ReplaceMapPointMatch(const int &idx, MapPoint *pMP)
 {
-    mvpMapPoints[idx]=pMP;
+    mvpMapPoints[idx] = pMP;
 }
 
 // 获取当前关键帧中的所有地图点
-set<MapPoint*> KeyFrame::GetMapPoints()
+set<MapPoint *> KeyFrame::GetMapPoints()
 {
     unique_lock<mutex> lock(mMutexFeatures);
-    set<MapPoint*> s;
-    for(size_t i=0, iend=mvpMapPoints.size(); i<iend; i++)
+    set<MapPoint *> s;
+    for (size_t i = 0, iend = mvpMapPoints.size(); i < iend; i++)
     {
         // 判断是否被删除了
-        if(!mvpMapPoints[i])
+        if (!mvpMapPoints[i])
             continue;
-        MapPoint* pMP = mvpMapPoints[i];
+        MapPoint *pMP = mvpMapPoints[i];
         // 如果是没有来得及删除的坏点也要进行这一步
-        if(!pMP->isBad())
+        if (!pMP->isBad())
             s.insert(pMP);
     }
     return s;
@@ -397,21 +395,21 @@ int KeyFrame::TrackedMapPoints(const int &minObs)
 {
     unique_lock<mutex> lock(mMutexFeatures);
 
-    int nPoints=0;
+    int nPoints = 0;
     // 是否检查数目
-    const bool bCheckObs = minObs>0;
+    const bool bCheckObs = minObs > 0;
     // N是当前帧中特征点的个数
-    for(int i=0; i<N; i++)
+    for (int i = 0; i < N; i++)
     {
-        MapPoint* pMP = mvpMapPoints[i];
-        if(pMP)     //没有被删除
+        MapPoint *pMP = mvpMapPoints[i];
+        if (pMP) //没有被删除
         {
-            if(!pMP->isBad())   //并且不是坏点
+            if (!pMP->isBad()) //并且不是坏点
             {
-                if(bCheckObs)
+                if (bCheckObs)
                 {
                     // 满足输入阈值要求的地图点计数加1
-                    if(mvpMapPoints[i]->Observations()>=minObs)
+                    if (mvpMapPoints[i]->Observations() >= minObs)
                         nPoints++;
                 }
                 else
@@ -424,14 +422,14 @@ int KeyFrame::TrackedMapPoints(const int &minObs)
 }
 
 // 获取当前关键帧的具体的地图点
-vector<MapPoint*> KeyFrame::GetMapPointMatches()
+vector<MapPoint *> KeyFrame::GetMapPointMatches()
 {
     unique_lock<mutex> lock(mMutexFeatures);
     return mvpMapPoints;
 }
 
 // 获取当前关键帧的具体的某个地图点
-MapPoint* KeyFrame::GetMapPoint(const size_t &idx)
+MapPoint *KeyFrame::GetMapPoint(const size_t &idx)
 {
     unique_lock<mutex> lock(mMutexFeatures);
     return mvpMapPoints[idx];
@@ -449,9 +447,9 @@ MapPoint* KeyFrame::GetMapPoint(const size_t &idx)
 void KeyFrame::UpdateConnections(bool upParent)
 {
     // 在没有执行这个函数前，关键帧只和MapPoints之间有连接关系，这个函数可以更新关键帧之间的连接关系
-    map<KeyFrame*,int> KFcounter;
+    map<KeyFrame *, int> KFcounter;
 
-    vector<MapPoint*> vpMP;
+    vector<MapPoint *> vpMP;
 
     {
         // 获得该关键帧的所有3D点
@@ -463,87 +461,86 @@ void KeyFrame::UpdateConnections(bool upParent)
     //Increase counter for those keyframes
     // 通过3D点间接统计可以观测到这些3D点的所有关键帧之间的共视程度
     // Step 1 统计每一个地图点都有多少关键帧与当前关键帧存在共视关系，统计结果放在KFcounter
-    for(vector<MapPoint*>::iterator vit=vpMP.begin(), vend=vpMP.end(); vit!=vend; vit++)
+    for (vector<MapPoint *>::iterator vit = vpMP.begin(), vend = vpMP.end(); vit != vend; vit++)
     {
-        MapPoint* pMP = *vit;
+        MapPoint *pMP = *vit;
 
-        if(!pMP)
+        if (!pMP)
             continue;
 
-        if(pMP->isBad())
+        if (pMP->isBad())
             continue;
 
         // 对于每一个MapPoint点，observations记录了可以观测到该MapPoint的所有关键帧
-        map<KeyFrame*,tuple<int,int>> observations = pMP->GetObservations();
+        map<KeyFrame *, tuple<int, int>> observations = pMP->GetObservations();
 
-        for(map<KeyFrame*,tuple<int,int>>::iterator mit=observations.begin(), mend=observations.end(); mit!=mend; mit++)
+        for (map<KeyFrame *, tuple<int, int>>::iterator mit = observations.begin(), mend = observations.end(); mit != mend; mit++)
         {
-            if(mit->first->mnId==mnId || mit->first->isBad() || mit->first->GetMap() != mpMap)
+            if (mit->first->mnId == mnId || mit->first->isBad() || mit->first->GetMap() != mpMap)
                 continue;
-			// 这里的操作非常精彩！
+            // 这里的操作非常精彩！
             // map[key] = value，当要插入的键存在时，会覆盖键对应的原来的值。如果键不存在，则添加一组键值对
             // mit->first 是地图点看到的关键帧，同一个关键帧看到的地图点会累加到该关键帧计数
             // 所以最后KFcounter 第一个参数表示某个关键帧，第2个参数表示该关键帧看到了多少当前帧的地图点，也就是共视程度
             KFcounter[mit->first]++;
-
         }
     }
 
     // This should not happen
-    if(KFcounter.empty())
+    if (KFcounter.empty())
         return;
 
     //If the counter is greater than threshold add connection
     //In case no keyframe counter is over threshold add the one with maximum counter
-    int nmax=0;
-    KeyFrame* pKFmax=NULL;
+    int nmax = 0;
+    KeyFrame *pKFmax = NULL;
     // 至少有15个共视地图点
     int th = 15;
 
     // vPairs记录与其它关键帧共视帧数大于th的关键帧
     // pair<int,KeyFrame*>将关键帧的权重写在前面，关键帧写在后面方便后面排序
-    vector<pair<int,KeyFrame*> > vPairs;
+    vector<pair<int, KeyFrame *>> vPairs;
     vPairs.reserve(KFcounter.size());
-    if(!upParent)
+    if (!upParent)
         cout << "UPDATE_CONN: current KF " << mnId << endl;
-	// Step 2 找到对应权重最大的关键帧（共视程度最高的关键帧）
-    for(map<KeyFrame*,int>::iterator mit=KFcounter.begin(), mend=KFcounter.end(); mit!=mend; mit++)
+    // Step 2 找到对应权重最大的关键帧（共视程度最高的关键帧）
+    for (map<KeyFrame *, int>::iterator mit = KFcounter.begin(), mend = KFcounter.end(); mit != mend; mit++)
     {
-        if(!upParent)
+        if (!upParent)
             cout << "  UPDATE_CONN: KF " << mit->first->mnId << " ; num matches: " << mit->second << endl;
-        if(mit->second>nmax)
+        if (mit->second > nmax)
         {
-            nmax=mit->second;
-            pKFmax=mit->first;
+            nmax = mit->second;
+            pKFmax = mit->first;
         }
-        if(mit->second>=th)
+        if (mit->second >= th)
         {
             // 对应权重需要大于阈值，对这些关键帧建立连接
-            vPairs.push_back(make_pair(mit->second,mit->first));
+            vPairs.push_back(make_pair(mit->second, mit->first));
             // 对方关键帧也要添加这个信息
             // 更新KFcounter中该关键帧的mConnectedKeyFrameWeights
             // 更新其它KeyFrame的mConnectedKeyFrameWeights，更新其它关键帧与当前帧的连接权重
-            (mit->first)->AddConnection(this,mit->second);
+            (mit->first)->AddConnection(this, mit->second);
         }
     }
 
     //  Step 3 如果没有连接到关键（超过阈值的权重），则对权重最大的关键帧建立连接
-    if(vPairs.empty())
+    if (vPairs.empty())
     {
-	    // 如果每个关键帧与它共视的关键帧的个数都少于th，
+        // 如果每个关键帧与它共视的关键帧的个数都少于th，
         // 那就只更新与其它关键帧共视程度最高的关键帧的mConnectedKeyFrameWeights
         // 这是对之前th这个阈值可能过高的一个补丁
-        vPairs.push_back(make_pair(nmax,pKFmax));
-        pKFmax->AddConnection(this,nmax);
+        vPairs.push_back(make_pair(nmax, pKFmax));
+        pKFmax->AddConnection(this, nmax);
     }
 
     //  Step 4 对共视程度比较高的关键帧对更新连接关系及权重（从大到小）
     // vPairs里存的都是相互共视程度比较高的关键帧和共视权重，接下来由大到小进行排序
-    sort(vPairs.begin(),vPairs.end());         // sort函数默认升序排列
+    sort(vPairs.begin(), vPairs.end()); // sort函数默认升序排列
     // 将排序后的结果分别组织成为两种数据类型
-    list<KeyFrame*> lKFs;
+    list<KeyFrame *> lKFs;
     list<int> lWs;
-    for(size_t i=0; i<vPairs.size();i++)
+    for (size_t i = 0; i < vPairs.size(); i++)
     {
         // push_front 后变成了从大到小顺序
         lKFs.push_front(vPairs[i].second);
@@ -556,17 +553,17 @@ void KeyFrame::UpdateConnections(bool upParent)
         // mspConnectedKeyFrames = spConnectedKeyFrames;
         // 更新当前帧与其它关键帧的连接权重
         mConnectedKeyFrameWeights = KFcounter;
-        mvpOrderedConnectedKeyFrames = vector<KeyFrame*>(lKFs.begin(),lKFs.end());
+        mvpOrderedConnectedKeyFrames = vector<KeyFrame *>(lKFs.begin(), lKFs.end());
         mvOrderedWeights = vector<int>(lWs.begin(), lWs.end());
 
-//        if(mbFirstConnection && mnId!=mpMap->GetInitKFid())
-//        {
-//            mpParent = mvpOrderedConnectedKeyFrames.front();
-//            mpParent->AddChild(this);
-//            mbFirstConnection = false;
-//        }
-		// Step 5 更新生成树的连接
-        if(mbFirstConnection && mnId!=mpMap->GetInitKFid())
+        //        if(mbFirstConnection && mnId!=mpMap->GetInitKFid())
+        //        {
+        //            mpParent = mvpOrderedConnectedKeyFrames.front();
+        //            mpParent->AddChild(this);
+        //            mbFirstConnection = false;
+        //        }
+        // Step 5 更新生成树的连接
+        if (mbFirstConnection && mnId != mpMap->GetInitKFid())
         {
             /*if(!mpParent || mpParent->GetParent() != this)
             {
@@ -589,16 +586,14 @@ void KeyFrame::UpdateConnections(bool upParent)
                 mbFirstConnection = false;
             }*/
             // cout << "udt.conn.id: " << mnId << endl;
-			// 初始化该关键帧的父关键帧为共视程度最高的那个关键帧
+            // 初始化该关键帧的父关键帧为共视程度最高的那个关键帧
             mpParent = mvpOrderedConnectedKeyFrames.front();
             // 建立双向连接关系，将当前关键帧作为其子关键帧
             mpParent->AddChild(this);
             mbFirstConnection = false;
         }
-
     }
 }
-
 
 // 添加子关键帧（即和子关键帧具有最大共视关系的关键帧就是当前关键帧）
 void KeyFrame::AddChild(KeyFrame *pKF)
@@ -618,9 +613,9 @@ void KeyFrame::EraseChild(KeyFrame *pKF)
 void KeyFrame::ChangeParent(KeyFrame *pKF)
 {
     unique_lock<mutex> lockCon(mMutexConnections);
-//    if(!mpParent && mpParent != this)
-//        mpParent->EraseChild(this);
-    if(pKF == this)
+    //    if(!mpParent && mpParent != this)
+    //        mpParent->EraseChild(this);
+    if (pKF == this)
     {
         cout << "ERROR: Change parent KF, the parent and child are the same KF" << endl;
         throw std::invalid_argument("The parent and child can not be the same");
@@ -631,14 +626,14 @@ void KeyFrame::ChangeParent(KeyFrame *pKF)
 }
 
 //获取当前关键帧的子关键帧
-set<KeyFrame*> KeyFrame::GetChilds()
+set<KeyFrame *> KeyFrame::GetChilds()
 {
     unique_lock<mutex> lockCon(mMutexConnections);
     return mspChildrens;
 }
 
 //获取当前关键帧的父关键帧
-KeyFrame* KeyFrame::GetParent()
+KeyFrame *KeyFrame::GetParent()
 {
     unique_lock<mutex> lockCon(mMutexConnections);
     return mpParent;
@@ -654,7 +649,7 @@ bool KeyFrame::hasChild(KeyFrame *pKF)
 void KeyFrame::SetFirstConnection(bool bFirst)
 {
     unique_lock<mutex> lockCon(mMutexConnections);
-    mbFirstConnection=bFirst;
+    mbFirstConnection = bFirst;
 }
 // 给当前关键帧添加回环边，回环边连接了形成闭环关系的关键帧
 void KeyFrame::AddLoopEdge(KeyFrame *pKF)
@@ -665,20 +660,20 @@ void KeyFrame::AddLoopEdge(KeyFrame *pKF)
 }
 
 // 获取和当前关键帧形成闭环关系的关键帧
-set<KeyFrame*> KeyFrame::GetLoopEdges()
+set<KeyFrame *> KeyFrame::GetLoopEdges()
 {
     unique_lock<mutex> lockCon(mMutexConnections);
     return mspLoopEdges;
 }
 
-void KeyFrame::AddMergeEdge(KeyFrame* pKF)
+void KeyFrame::AddMergeEdge(KeyFrame *pKF)
 {
     unique_lock<mutex> lockCon(mMutexConnections);
     mbNotErase = true;
     mspMergeEdges.insert(pKF);
 }
 
-set<KeyFrame*> KeyFrame::GetMergeEdges()
+set<KeyFrame *> KeyFrame::GetMergeEdges()
 {
     unique_lock<mutex> lockCon(mMutexConnections);
     return mspMergeEdges;
@@ -700,14 +695,14 @@ void KeyFrame::SetErase()
         unique_lock<mutex> lock(mMutexConnections);
 
         // 如果当前关键帧和其他的关键帧没有形成回环关系,那么就删吧
-        if(mspLoopEdges.empty())
+        if (mspLoopEdges.empty())
         {
             mbNotErase = false;
         }
     }
 
     // mbToBeErased：删除之前记录的想要删但时机不合适没有删除的帧
-    if(mbToBeErased)
+    if (mbToBeErased)
     {
         SetBadFlag();
     }
@@ -722,24 +717,24 @@ void KeyFrame::SetErase()
  * 在闭环线程里调用 SetErase()会根据mbToBeErased 来删除之前可以删除还没删除的帧。
  */
 void KeyFrame::SetBadFlag()
-{   
+{
     // std::cout << "Erasing KF..." << std::endl;
-	// Step 1 首先处理一下删除不了的特殊情况
+    // Step 1 首先处理一下删除不了的特殊情况
     {
         unique_lock<mutex> lock(mMutexConnections);
-		// 初始关键帧不能删除
-        if(mnId==mpMap->GetInitKFid())
+        // 初始关键帧不能删除
+        if (mnId == mpMap->GetInitKFid())
         {
             //std::cout << "KF.BADFLAG-> KF 0!!" << std::endl;
             return;
         }
-        else if(mbNotErase)
+        else if (mbNotErase)
         {
             // mbNotErase表示不应该删除，于是把mbToBeErased置为true，假装已经删除，其实没有删除
             mbToBeErased = true;
             return;
         }
-        if(!mpParent)
+        if (!mpParent)
         {
             //cout << "KF.BADFLAG-> There is not parent, but it is not the first KF in the map" << endl;
             //cout << "KF.BADFLAG-> KF: " << mnId << "; first KF: " << mpMap->GetInitKFid() << endl;
@@ -747,15 +742,15 @@ void KeyFrame::SetBadFlag()
     }
 
     // Step 2 遍历所有和当前关键帧共视的关键帧，删除他们与当前关键帧的联系
-    for(map<KeyFrame*,int>::iterator mit = mConnectedKeyFrameWeights.begin(), mend=mConnectedKeyFrameWeights.end(); mit!=mend; mit++)
+    for (map<KeyFrame *, int>::iterator mit = mConnectedKeyFrameWeights.begin(), mend = mConnectedKeyFrameWeights.end(); mit != mend; mit++)
     {
         mit->first->EraseConnection(this); // 让其它的KeyFrame删除与自己的联系
     }
     //std::cout << "KF.BADFLAG-> Connection erased..." << std::endl;
     // Step 3 遍历每一个当前关键帧的地图点，删除每一个地图点和当前关键帧的联系
-    for(size_t i=0; i<mvpMapPoints.size(); i++)
+    for (size_t i = 0; i < mvpMapPoints.size(); i++)
     {
-        if(mvpMapPoints[i])
+        if (mvpMapPoints[i])
         {
             mvpMapPoints[i]->EraseObservation(this); // 让与自己有联系的MapPoint删除与自己的联系
             // nDeletedPoints++;
@@ -772,53 +767,53 @@ void KeyFrame::SetBadFlag()
         mConnectedKeyFrameWeights.clear();
         mvpOrderedConnectedKeyFrames.clear();
 
-        // Update Spanning Tree 
+        // Update Spanning Tree
         // Step 4 更新生成树，主要是处理好父子关键帧，不然会造成整个关键帧维护的图断裂，或者混乱，不能够为后端提供较好的初值
         // 子关键帧候选父关键帧
-        set<KeyFrame*> sParentCandidates;
-		// 将当前帧的父关键帧放入候选父关键帧
-        if(mpParent)
+        set<KeyFrame *> sParentCandidates;
+        // 将当前帧的父关键帧放入候选父关键帧
+        if (mpParent)
             sParentCandidates.insert(mpParent);
         //std::cout << "KF.BADFLAG-> Initially there are " << sParentCandidates.size() << " candidates" << std::endl;
 
         // Assign at each iteration one children with a parent (the pair with highest covisibility weight)
         // Include that children as new parent candidate for the rest
         // 如果这个关键帧有自己的子关键帧，告诉这些子关键帧，它们的父关键帧不行了，赶紧找新的父关键帧
-        while(!mspChildrens.empty())
+        while (!mspChildrens.empty())
         {
             bool bContinue = false;
 
             int max = -1;
-            KeyFrame* pC;
-            KeyFrame* pP;
+            KeyFrame *pC;
+            KeyFrame *pP;
 
             // Step 4.1 遍历每一个子关键帧，让它们更新它们指向的父关键帧
-            for(set<KeyFrame*>::iterator sit=mspChildrens.begin(), send=mspChildrens.end(); sit!=send; sit++)
+            for (set<KeyFrame *>::iterator sit = mspChildrens.begin(), send = mspChildrens.end(); sit != send; sit++)
             {
-                KeyFrame* pKF = *sit;
+                KeyFrame *pKF = *sit;
                 // 跳过无效的子关键帧
-                if(pKF->isBad())
+                if (pKF->isBad())
                     continue;
 
                 // Check if a parent candidate is connected to the keyframe
-                // Step 4.2 子关键帧遍历每一个与它共视的关键帧    
-                vector<KeyFrame*> vpConnected = pKF->GetVectorCovisibleKeyFrames();
-                for(size_t i=0, iend=vpConnected.size(); i<iend; i++)
+                // Step 4.2 子关键帧遍历每一个与它共视的关键帧
+                vector<KeyFrame *> vpConnected = pKF->GetVectorCovisibleKeyFrames();
+                for (size_t i = 0, iend = vpConnected.size(); i < iend; i++)
                 {
                     // sParentCandidates 中刚开始存的是“爷爷”
-                    for(set<KeyFrame*>::iterator spcit=sParentCandidates.begin(), spcend=sParentCandidates.end(); spcit!=spcend; spcit++)
+                    for (set<KeyFrame *>::iterator spcit = sParentCandidates.begin(), spcend = sParentCandidates.end(); spcit != spcend; spcit++)
                     {
                         // Step 4.3 如果孩子和候选的父节点共视，说明找到了备选的父节点
-                        if(vpConnected[i]->mnId == (*spcit)->mnId)
+                        if (vpConnected[i]->mnId == (*spcit)->mnId)
                         {
                             int w = pKF->GetWeight(vpConnected[i]);
                             // 寻找并更新权值最大的那个共视关系
-                            if(w>max)
+                            if (w > max)
                             {
-                                pC = pKF;                   //子关键帧
-                                pP = vpConnected[i];        //目前和子关键帧具有最大权值的关键帧（将来的父关键帧） 
-                                max = w;                    //这个最大的权值
-                                bContinue = true;           //说明子节点找到了可以作为其新父关键帧的帧
+                                pC = pKF;            //子关键帧
+                                pP = vpConnected[i]; //目前和子关键帧具有最大权值的关键帧（将来的父关键帧）
+                                max = w;             //这个最大的权值
+                                bContinue = true;    //说明子节点找到了可以作为其新父关键帧的帧
                             }
                         }
                     }
@@ -828,15 +823,15 @@ void KeyFrame::SetBadFlag()
             // Step 4.4 如果在上面的过程中找到了新的父节点
             // 下面代码应该放到遍历子关键帧循环中?
             // 回答：不需要！这里while循环还没退出，会使用更新的sParentCandidates
-            if(bContinue)
+            if (bContinue)
             {
-                if(pC->mnId == pP->mnId)
+                if (pC->mnId == pP->mnId)
                 {
                     /*cout << "ERROR: The parent and son can't be the same KF. ID: " << pC->mnId << endl;
                     cout << "Current KF: " << mnId << endl;
                     cout << "Parent of the map: " << endl;*/
                 }
-				// 因为父节点死了，并且子节点找到了新的父节点，就把它更新为自己的父节点
+                // 因为父节点死了，并且子节点找到了新的父节点，就把它更新为自己的父节点
                 pC->ChangeParent(pP);
                 // 因为子节点找到了新的父节点并更新了父节点，那么该子节点升级，作为其它子节点的备选父节点
                 sParentCandidates.insert(pC);
@@ -850,9 +845,9 @@ void KeyFrame::SetBadFlag()
 
         // If a children has no covisibility links with any parent candidate, assign to the original parent of this KF
         // Step 4.5 如果还有子节点没有找到新的父节点
-        if(!mspChildrens.empty())
+        if (!mspChildrens.empty())
         {
-            for(set<KeyFrame*>::iterator sit=mspChildrens.begin(); sit!=mspChildrens.end(); sit++)
+            for (set<KeyFrame *>::iterator sit = mspChildrens.begin(); sit != mspChildrens.end(); sit++)
             {
                 // 直接把父节点的父节点作为自己的父节点 即对于这些子节点来说,他们的新的父节点其实就是自己的爷爷节点
                 (*sit)->ChangeParent(mpParent);
@@ -860,20 +855,20 @@ void KeyFrame::SetBadFlag()
         }
         //std::cout << "KF.BADFLAG-> Apply change to its parent" << std::endl;
 
-        if(mpParent){
+        if (mpParent)
+        {
             mpParent->EraseChild(this);
-	        // 如果当前的关键帧要被删除的话就要计算这个,表示原父关键帧到当前关键帧的位姿变换
-	        // 注意在这个删除的过程中,其实并没有将当前关键帧中存储的父关键帧的指针删除掉
-            mTcp = Tcw*mpParent->GetPoseInverse();
+            // 如果当前的关键帧要被删除的话就要计算这个,表示原父关键帧到当前关键帧的位姿变换
+            // 注意在这个删除的过程中,其实并没有将当前关键帧中存储的父关键帧的指针删除掉
+            mTcp = Tcw * mpParent->GetPoseInverse();
         }
         else
         {
             //cout << "Error: KF haven't got a parent, it is imposible reach this code point without him" << endl;
         }
-		// 标记当前关键帧已经死了
+        // 标记当前关键帧已经死了
         mbBad = true;
     }
-
 
     mpMap->EraseKeyFrame(this);
     mpKeyFrameDB->erase(this);
@@ -887,21 +882,21 @@ bool KeyFrame::isBad()
 }
 
 // 删除当前关键帧和指定关键帧之间的共视关系
-void KeyFrame::EraseConnection(KeyFrame* pKF)
+void KeyFrame::EraseConnection(KeyFrame *pKF)
 {
     // 其实这个应该表示是否真的是有共视关系
     bool bUpdate = false;
     {
         unique_lock<mutex> lock(mMutexConnections);
-        if(mConnectedKeyFrameWeights.count(pKF))
+        if (mConnectedKeyFrameWeights.count(pKF))
         {
             mConnectedKeyFrameWeights.erase(pKF);
-            bUpdate=true;
+            bUpdate = true;
         }
     }
 
     // 如果是真的有共视关系,那么删除之后就要更新共视关系
-    if(bUpdate)
+    if (bUpdate)
         UpdateBestCovisibles();
 }
 
@@ -910,42 +905,40 @@ vector<size_t> KeyFrame::GetFeaturesInArea(const float &x, const float &y, const
 {
     vector<size_t> vIndices;
     vIndices.reserve(N);
-	// 计算要搜索的cell的范围
+    // 计算要搜索的cell的范围
     float factorX = r;
     float factorY = r;
-	// floor向下取整，mfGridElementWidthInv 为每个像素占多少个格子
-    const int nMinCellX = max(0,(int)floor((x-mnMinX-factorX)*mfGridElementWidthInv));
-    if(nMinCellX>=mnGridCols)
+    // floor向下取整，mfGridElementWidthInv 为每个像素占多少个格子
+    const int nMinCellX = max(0, (int)floor((x - mnMinX - factorX) * mfGridElementWidthInv));
+    if (nMinCellX >= mnGridCols)
         return vIndices;
 
     // ceil向上取整
-    const int nMaxCellX = min((int)mnGridCols-1,(int)ceil((x-mnMinX+factorX)*mfGridElementWidthInv));
-    if(nMaxCellX<0)
+    const int nMaxCellX = min((int)mnGridCols - 1, (int)ceil((x - mnMinX + factorX) * mfGridElementWidthInv));
+    if (nMaxCellX < 0)
         return vIndices;
 
-    const int nMinCellY = max(0,(int)floor((y-mnMinY-factorY)*mfGridElementHeightInv));
-    if(nMinCellY>=mnGridRows)
+    const int nMinCellY = max(0, (int)floor((y - mnMinY - factorY) * mfGridElementHeightInv));
+    if (nMinCellY >= mnGridRows)
         return vIndices;
 
-    const int nMaxCellY = min((int)mnGridRows-1,(int)ceil((y-mnMinY+factorY)*mfGridElementHeightInv));
-    if(nMaxCellY<0)
+    const int nMaxCellY = min((int)mnGridRows - 1, (int)ceil((y - mnMinY + factorY) * mfGridElementHeightInv));
+    if (nMaxCellY < 0)
         return vIndices;
 
     // 遍历每个cell,取出其中每个cell中的点,并且每个点都要计算是否在邻域内
-    for(int ix = nMinCellX; ix<=nMaxCellX; ix++)
+    for (int ix = nMinCellX; ix <= nMaxCellX; ix++)
     {
-        for(int iy = nMinCellY; iy<=nMaxCellY; iy++)
+        for (int iy = nMinCellY; iy <= nMaxCellY; iy++)
         {
             const vector<size_t> vCell = (!bRight) ? mGrid[ix][iy] : mGridRight[ix][iy];
-            for(size_t j=0, jend=vCell.size(); j<jend; j++)
+            for (size_t j = 0, jend = vCell.size(); j < jend; j++)
             {
-                const cv::KeyPoint &kpUn = (NLeft == -1) ? mvKeysUn[vCell[j]]
-                                                         : (!bRight) ? mvKeys[vCell[j]]
-                                                                     : mvKeysRight[vCell[j]];
-                const float distx = kpUn.pt.x-x;
-                const float disty = kpUn.pt.y-y;
+                const cv::KeyPoint &kpUn = (NLeft == -1) ? mvKeysUn[vCell[j]] : (!bRight) ? mvKeys[vCell[j]] : mvKeysRight[vCell[j]];
+                const float distx = kpUn.pt.x - x;
+                const float disty = kpUn.pt.y - y;
 
-                if(fabs(distx)<r && fabs(disty)<r)
+                if (fabs(distx) < r && fabs(disty) < r)
                     vIndices.push_back(vCell[j]);
             }
         }
@@ -957,7 +950,7 @@ vector<size_t> KeyFrame::GetFeaturesInArea(const float &x, const float &y, const
 // 判断某个点是否在当前关键帧的图像中
 bool KeyFrame::IsInImage(const float &x, const float &y) const
 {
-    return (x>=mnMinX && x<mnMaxX && y>=mnMinY && y<mnMaxY);
+    return (x >= mnMinX && x < mnMaxX && y >= mnMinY && y < mnMaxY);
 }
 
 /**
@@ -969,21 +962,21 @@ bool KeyFrame::IsInImage(const float &x, const float &y) const
 cv::Mat KeyFrame::UnprojectStereo(int i)
 {
     const float z = mvDepth[i];
-    if(z>0)
+    if (z > 0)
     {
         // 由2维图像反投影到相机坐标系
         // 双目中mvDepth是在ComputeStereoMatches函数中求取的，rgbd中是直接测量的
         const float u = mvKeys[i].pt.x;
         const float v = mvKeys[i].pt.y;
-        const float x = (u-cx)*z*invfx;
-        const float y = (v-cy)*z*invfy;
-        cv::Mat x3Dc = (cv::Mat_<float>(3,1) << x, y, z);
+        const float x = (u - cx) * z * invfx;
+        const float y = (v - cy) * z * invfy;
+        cv::Mat x3Dc = (cv::Mat_<float>(3, 1) << x, y, z);
 
         unique_lock<mutex> lock(mMutexPose);
         // 由相机坐标系转换到世界坐标系
         // Twc为相机坐标系到世界坐标系的变换矩阵
         // Twc.rosRange(0,3).colRange(0,3)取Twc矩阵的前3行与前3列
-        return Twc.rowRange(0,3).colRange(0,3)*x3Dc+Twc.rowRange(0,3).col(3);
+        return Twc.rowRange(0, 3).colRange(0, 3) * x3Dc + Twc.rowRange(0, 3).col(3);
     }
     else
         return cv::Mat();
@@ -993,7 +986,7 @@ cv::Mat KeyFrame::UnprojectStereo(int i)
 // 其实过程就是对当前关键帧下所有地图点的深度进行从小到大排序,返回距离头部其中1/q处的深度值作为当前场景的平均深度
 float KeyFrame::ComputeSceneMedianDepth(const int q)
 {
-    vector<MapPoint*> vpMapPoints;
+    vector<MapPoint *> vpMapPoints;
     cv::Mat Tcw_;
     {
         unique_lock<mutex> lock(mMutexFeatures);
@@ -1004,44 +997,44 @@ float KeyFrame::ComputeSceneMedianDepth(const int q)
 
     vector<float> vDepths;
     vDepths.reserve(N);
-    cv::Mat Rcw2 = Tcw_.row(2).colRange(0,3);
+    cv::Mat Rcw2 = Tcw_.row(2).colRange(0, 3);
     Rcw2 = Rcw2.t();
-    float zcw = Tcw_.at<float>(2,3);
+    float zcw = Tcw_.at<float>(2, 3);
     // 遍历每一个地图点,计算并保存其在当前关键帧下的深度
-    for(int i=0; i<N; i++)
+    for (int i = 0; i < N; i++)
     {
-        if(mvpMapPoints[i])
+        if (mvpMapPoints[i])
         {
-            MapPoint* pMP = mvpMapPoints[i];
+            MapPoint *pMP = mvpMapPoints[i];
             cv::Mat x3Dw = pMP->GetWorldPos();
-            float z = Rcw2.dot(x3Dw)+zcw; // (R*x3Dw+t)的第三行，即z
+            float z = Rcw2.dot(x3Dw) + zcw; // (R*x3Dw+t)的第三行，即z
             vDepths.push_back(z);
         }
     }
 
-    sort(vDepths.begin(),vDepths.end());
+    sort(vDepths.begin(), vDepths.end());
 
-    return vDepths[(vDepths.size()-1)/q];
+    return vDepths[(vDepths.size() - 1) / q];
 }
 
 void KeyFrame::SetNewBias(const IMU::Bias &b)
 {
     unique_lock<mutex> lock(mMutexPose);
     mImuBias = b;
-    if(mpImuPreintegrated)
+    if (mpImuPreintegrated)
         mpImuPreintegrated->SetNewBias(b);
 }
 
 cv::Mat KeyFrame::GetGyroBias()
 {
     unique_lock<mutex> lock(mMutexPose);
-    return (cv::Mat_<float>(3,1) << mImuBias.bwx, mImuBias.bwy, mImuBias.bwz);
+    return (cv::Mat_<float>(3, 1) << mImuBias.bwx, mImuBias.bwy, mImuBias.bwz);
 }
 
 cv::Mat KeyFrame::GetAccBias()
 {
     unique_lock<mutex> lock(mMutexPose);
-    return (cv::Mat_<float>(3,1) << mImuBias.bax, mImuBias.bay, mImuBias.baz);
+    return (cv::Mat_<float>(3, 1) << mImuBias.bax, mImuBias.bay, mImuBias.baz);
 }
 
 IMU::Bias KeyFrame::GetImuBias()
@@ -1050,27 +1043,26 @@ IMU::Bias KeyFrame::GetImuBias()
     return mImuBias;
 }
 
-Map* KeyFrame::GetMap()
+Map *KeyFrame::GetMap()
 {
     unique_lock<mutex> lock(mMutexMap);
     return mpMap;
 }
 
-void KeyFrame::UpdateMap(Map* pMap)
+void KeyFrame::UpdateMap(Map *pMap)
 {
     unique_lock<mutex> lock(mMutexMap);
     mpMap = pMap;
 }
 
-void KeyFrame::PreSave(set<KeyFrame*>& spKF,set<MapPoint*>& spMP, set<GeometricCamera*>& spCam)
+void KeyFrame::PreSave(set<KeyFrame *> &spKF, set<MapPoint *> &spMP, set<GeometricCamera *> &spCam)
 {
     // Save the id of each MapPoint in this KF, there can be null pointer in the vector
     mvBackupMapPointsId.clear();
     mvBackupMapPointsId.reserve(N);
-    for(int i = 0; i < N; ++i)
+    for (int i = 0; i < N; ++i)
     {
-
-        if(mvpMapPoints[i] && spMP.find(mvpMapPoints[i]) != spMP.end()) // Checks if the element is not null
+        if (mvpMapPoints[i] && spMP.find(mvpMapPoints[i]) != spMP.end()) // Checks if the element is not null
             mvBackupMapPointsId.push_back(mvpMapPoints[i]->mnId);
         else // If the element is null his value is -1 because all the id are positives
             mvBackupMapPointsId.push_back(-1);
@@ -1078,71 +1070,72 @@ void KeyFrame::PreSave(set<KeyFrame*>& spKF,set<MapPoint*>& spMP, set<GeometricC
     //cout << "KeyFrame: ID from MapPoints stored" << endl;
     // Save the id of each connected KF with it weight
     mBackupConnectedKeyFrameIdWeights.clear();
-    for(std::map<KeyFrame*,int>::const_iterator it = mConnectedKeyFrameWeights.begin(), end = mConnectedKeyFrameWeights.end(); it != end; ++it)
+    for (std::map<KeyFrame *, int>::const_iterator it = mConnectedKeyFrameWeights.begin(), end = mConnectedKeyFrameWeights.end(); it != end; ++it)
     {
-        if(spKF.find(it->first) != spKF.end())
+        if (spKF.find(it->first) != spKF.end())
             mBackupConnectedKeyFrameIdWeights[it->first->mnId] = it->second;
     }
     //cout << "KeyFrame: ID from connected KFs stored" << endl;
     // Save the parent id
     mBackupParentId = -1;
-    if(mpParent && spKF.find(mpParent) != spKF.end())
+    if (mpParent && spKF.find(mpParent) != spKF.end())
         mBackupParentId = mpParent->mnId;
     //cout << "KeyFrame: ID from Parent KF stored" << endl;
     // Save the id of the childrens KF
     mvBackupChildrensId.clear();
     mvBackupChildrensId.reserve(mspChildrens.size());
-    for(KeyFrame* pKFi : mspChildrens)
+    for (KeyFrame *pKFi : mspChildrens)
     {
-        if(spKF.find(pKFi) != spKF.end())
+        if (spKF.find(pKFi) != spKF.end())
             mvBackupChildrensId.push_back(pKFi->mnId);
     }
     //cout << "KeyFrame: ID from Children KFs stored" << endl;
     // Save the id of the loop edge KF
     mvBackupLoopEdgesId.clear();
     mvBackupLoopEdgesId.reserve(mspLoopEdges.size());
-    for(KeyFrame* pKFi : mspLoopEdges)
+    for (KeyFrame *pKFi : mspLoopEdges)
     {
-        if(spKF.find(pKFi) != spKF.end())
+        if (spKF.find(pKFi) != spKF.end())
             mvBackupLoopEdgesId.push_back(pKFi->mnId);
     }
     //cout << "KeyFrame: ID from Loop KFs stored" << endl;
     // Save the id of the merge edge KF
     mvBackupMergeEdgesId.clear();
     mvBackupMergeEdgesId.reserve(mspMergeEdges.size());
-    for(KeyFrame* pKFi : mspMergeEdges)
+    for (KeyFrame *pKFi : mspMergeEdges)
     {
-        if(spKF.find(pKFi) != spKF.end())
+        if (spKF.find(pKFi) != spKF.end())
             mvBackupMergeEdgesId.push_back(pKFi->mnId);
     }
     //cout << "KeyFrame: ID from Merge KFs stored" << endl;
 
     //Camera data
     mnBackupIdCamera = -1;
-    if(mpCamera && spCam.find(mpCamera) != spCam.end())
+    if (mpCamera && spCam.find(mpCamera) != spCam.end())
         mnBackupIdCamera = mpCamera->GetId();
     //cout << "KeyFrame: ID from Camera1 stored; " << mnBackupIdCamera << endl;
 
     mnBackupIdCamera2 = -1;
-    if(mpCamera2 && spCam.find(mpCamera2) != spCam.end())
+    if (mpCamera2 && spCam.find(mpCamera2) != spCam.end())
         mnBackupIdCamera2 = mpCamera2->GetId();
     //cout << "KeyFrame: ID from Camera2 stored; " << mnBackupIdCamera2 << endl;
 
     //Inertial data
     mBackupPrevKFId = -1;
-    if(mPrevKF && spKF.find(mPrevKF) != spKF.end())
+    if (mPrevKF && spKF.find(mPrevKF) != spKF.end())
         mBackupPrevKFId = mPrevKF->mnId;
     //cout << "KeyFrame: ID from Prev KF stored" << endl;
     mBackupNextKFId = -1;
-    if(mNextKF && spKF.find(mNextKF) != spKF.end())
+    if (mNextKF && spKF.find(mNextKF) != spKF.end())
         mBackupNextKFId = mNextKF->mnId;
     //cout << "KeyFrame: ID from NextKF stored" << endl;
-    if(mpImuPreintegrated)
+    if (mpImuPreintegrated)
         mBackupImuPreintegrated.CopyFrom(mpImuPreintegrated);
     //cout << "KeyFrame: Imu Preintegrated stored" << endl;
 }
 
-void KeyFrame::PostLoad(map<long unsigned int, KeyFrame*>& mpKFid, map<long unsigned int, MapPoint*>& mpMPid, map<unsigned int, GeometricCamera*>& mpCamId){
+void KeyFrame::PostLoad(map<long unsigned int, KeyFrame *> &mpKFid, map<long unsigned int, MapPoint *> &mpMPid, map<unsigned int, GeometricCamera *> &mpCamId)
+{
     // Rebuild the empty variables
 
     // Pose
@@ -1152,69 +1145,68 @@ void KeyFrame::PostLoad(map<long unsigned int, KeyFrame*>& mpKFid, map<long unsi
     // Each MapPoint sight from this KeyFrame
     mvpMapPoints.clear();
     mvpMapPoints.resize(N);
-    for(int i=0; i<N; ++i)
+    for (int i = 0; i < N; ++i)
     {
-        if(mvBackupMapPointsId[i] != -1)
+        if (mvBackupMapPointsId[i] != -1)
             mvpMapPoints[i] = mpMPid[mvBackupMapPointsId[i]];
         else
-            mvpMapPoints[i] = static_cast<MapPoint*>(NULL);
+            mvpMapPoints[i] = static_cast<MapPoint *>(NULL);
     }
 
     // Conected KeyFrames with him weight
     mConnectedKeyFrameWeights.clear();
-    for(map<long unsigned int, int>::const_iterator it = mBackupConnectedKeyFrameIdWeights.begin(), end = mBackupConnectedKeyFrameIdWeights.end();
-        it != end; ++it)
+    for (map<long unsigned int, int>::const_iterator it = mBackupConnectedKeyFrameIdWeights.begin(), end = mBackupConnectedKeyFrameIdWeights.end();
+         it != end; ++it)
     {
-        KeyFrame* pKFi = mpKFid[it->first];
+        KeyFrame *pKFi = mpKFid[it->first];
         mConnectedKeyFrameWeights[pKFi] = it->second;
     }
 
     // Restore parent KeyFrame
-    if(mBackupParentId>=0)
+    if (mBackupParentId >= 0)
         mpParent = mpKFid[mBackupParentId];
 
     // KeyFrame childrens
     mspChildrens.clear();
-    for(vector<long unsigned int>::const_iterator it = mvBackupChildrensId.begin(), end = mvBackupChildrensId.end(); it!=end; ++it)
+    for (vector<long unsigned int>::const_iterator it = mvBackupChildrensId.begin(), end = mvBackupChildrensId.end(); it != end; ++it)
     {
         mspChildrens.insert(mpKFid[*it]);
     }
 
     // Loop edge KeyFrame
     mspLoopEdges.clear();
-    for(vector<long unsigned int>::const_iterator it = mvBackupLoopEdgesId.begin(), end = mvBackupLoopEdgesId.end(); it != end; ++it)
+    for (vector<long unsigned int>::const_iterator it = mvBackupLoopEdgesId.begin(), end = mvBackupLoopEdgesId.end(); it != end; ++it)
     {
         mspLoopEdges.insert(mpKFid[*it]);
     }
 
     // Merge edge KeyFrame
     mspMergeEdges.clear();
-    for(vector<long unsigned int>::const_iterator it = mvBackupMergeEdgesId.begin(), end = mvBackupMergeEdgesId.end(); it != end; ++it)
+    for (vector<long unsigned int>::const_iterator it = mvBackupMergeEdgesId.begin(), end = mvBackupMergeEdgesId.end(); it != end; ++it)
     {
         mspMergeEdges.insert(mpKFid[*it]);
     }
 
     //Camera data
-    if(mnBackupIdCamera >= 0)
+    if (mnBackupIdCamera >= 0)
     {
         mpCamera = mpCamId[mnBackupIdCamera];
     }
-    if(mnBackupIdCamera2 >= 0)
+    if (mnBackupIdCamera2 >= 0)
     {
         mpCamera2 = mpCamId[mnBackupIdCamera2];
     }
 
     //Inertial data
-    if(mBackupPrevKFId != -1)
+    if (mBackupPrevKFId != -1)
     {
         mPrevKF = mpKFid[mBackupPrevKFId];
     }
-    if(mBackupNextKFId != -1)
+    if (mBackupNextKFId != -1)
     {
         mNextKF = mpKFid[mBackupNextKFId];
     }
     mpImuPreintegrated = &mBackupImuPreintegrated;
-
 
     // Remove all backup container
     mvBackupMapPointsId.clear();
@@ -1227,37 +1219,36 @@ void KeyFrame::PostLoad(map<long unsigned int, KeyFrame*>& mpKFid, map<long unsi
     //ComputeSceneMedianDepth();
 }
 
-bool KeyFrame::ProjectPointDistort(MapPoint* pMP, cv::Point2f &kp, float &u, float &v)
+bool KeyFrame::ProjectPointDistort(MapPoint *pMP, cv::Point2f &kp, float &u, float &v)
 {
-
     // 3D in absolute coordinates
     cv::Mat P = pMP->GetWorldPos();
     cv::Mat Rcw = Tcw.rowRange(0, 3).colRange(0, 3);
     cv::Mat tcw = Tcw.rowRange(0, 3).col(3);
 
     // 3D in camera coordinates
-    cv::Mat Pc = Rcw*P+tcw;
+    cv::Mat Pc = Rcw * P + tcw;
     float &PcX = Pc.at<float>(0);
-    float &PcY= Pc.at<float>(1);
+    float &PcY = Pc.at<float>(1);
     float &PcZ = Pc.at<float>(2);
 
     // Check positive depth
-    if(PcZ<0.0f)
+    if (PcZ < 0.0f)
     {
         cout << "Negative depth: " << PcZ << endl;
         return false;
     }
 
     // Project in image and check it is not outside
-    float invz = 1.0f/PcZ;
-    u=fx*PcX*invz+cx;
-    v=fy*PcY*invz+cy;
+    float invz = 1.0f / PcZ;
+    u = fx * PcX * invz + cx;
+    v = fy * PcY * invz + cy;
 
     // cout << "c";
 
-    if(u<mnMinX || u>mnMaxX)
+    if (u < mnMinX || u > mnMaxX)
         return false;
-    if(v<mnMinY || v>mnMaxY)
+    if (v < mnMinY || v > mnMaxY)
         return false;
 
     float x = (u - cx) * invfx;
@@ -1268,7 +1259,7 @@ bool KeyFrame::ProjectPointDistort(MapPoint* pMP, cv::Point2f &kp, float &u, flo
     float p1 = mDistCoef.at<float>(2);
     float p2 = mDistCoef.at<float>(3);
     float k3 = 0;
-    if(mDistCoef.total() == 5)
+    if (mDistCoef.total() == 5)
     {
         k3 = mDistCoef.at<float>(4);
     }
@@ -1292,36 +1283,35 @@ bool KeyFrame::ProjectPointDistort(MapPoint* pMP, cv::Point2f &kp, float &u, flo
     return true;
 }
 
-bool KeyFrame::ProjectPointUnDistort(MapPoint* pMP, cv::Point2f &kp, float &u, float &v)
+bool KeyFrame::ProjectPointUnDistort(MapPoint *pMP, cv::Point2f &kp, float &u, float &v)
 {
-
     // 3D in absolute coordinates
     cv::Mat P = pMP->GetWorldPos();
     cv::Mat Rcw = Tcw.rowRange(0, 3).colRange(0, 3);
     cv::Mat tcw = Tcw.rowRange(0, 3).col(3);
     // 3D in camera coordinates
-    cv::Mat Pc = Rcw*P+tcw;
+    cv::Mat Pc = Rcw * P + tcw;
     float &PcX = Pc.at<float>(0);
-    float &PcY= Pc.at<float>(1);
+    float &PcY = Pc.at<float>(1);
     float &PcZ = Pc.at<float>(2);
 
     // Check positive depth
-    if(PcZ<0.0f)
+    if (PcZ < 0.0f)
     {
         cout << "Negative depth: " << PcZ << endl;
         return false;
     }
 
     // Project in image and check it is not outside
-    const float invz = 1.0f/PcZ;
-    u=fx*PcX*invz+cx;
-    v=fy*PcY*invz+cy;
+    const float invz = 1.0f / PcZ;
+    u = fx * PcX * invz + cx;
+    v = fy * PcY * invz + cy;
 
     // cout << "c";
 
-    if(u<mnMinX || u>mnMaxX)
+    if (u < mnMinX || u > mnMaxX)
         return false;
-    if(v<mnMinY || v>mnMaxY)
+    if (v < mnMinY || v > mnMaxY)
         return false;
 
     kp = cv::Point2f(u, v);
@@ -1329,66 +1319,71 @@ bool KeyFrame::ProjectPointUnDistort(MapPoint* pMP, cv::Point2f &kp, float &u, f
     return true;
 }
 
-cv::Mat KeyFrame::GetRightPose() {
+cv::Mat KeyFrame::GetRightPose()
+{
     unique_lock<mutex> lock(mMutexPose);
 
-    cv::Mat Rrl = mTlr.rowRange(0,3).colRange(0,3).t();
-    cv::Mat Rlw = Tcw.rowRange(0,3).colRange(0,3).clone();
+    cv::Mat Rrl = mTlr.rowRange(0, 3).colRange(0, 3).t();
+    cv::Mat Rlw = Tcw.rowRange(0, 3).colRange(0, 3).clone();
     cv::Mat Rrw = Rrl * Rlw;
 
-    cv::Mat tlw = Tcw.rowRange(0,3).col(3).clone();
-    cv::Mat trl = - Rrl * mTlr.rowRange(0,3).col(3);
+    cv::Mat tlw = Tcw.rowRange(0, 3).col(3).clone();
+    cv::Mat trl = -Rrl * mTlr.rowRange(0, 3).col(3);
 
     cv::Mat trw = Rrl * tlw + trl;
 
     cv::Mat Trw;
-    cv::hconcat(Rrw,trw,Trw);
+    cv::hconcat(Rrw, trw, Trw);
 
     return Trw.clone();
 }
 
-cv::Mat KeyFrame::GetRightPoseInverse() {
+cv::Mat KeyFrame::GetRightPoseInverse()
+{
     unique_lock<mutex> lock(mMutexPose);
-    cv::Mat Rrl = mTlr.rowRange(0,3).colRange(0,3).t();
-    cv::Mat Rlw = Tcw.rowRange(0,3).colRange(0,3).clone();
+    cv::Mat Rrl = mTlr.rowRange(0, 3).colRange(0, 3).t();
+    cv::Mat Rlw = Tcw.rowRange(0, 3).colRange(0, 3).clone();
     cv::Mat Rwr = (Rrl * Rlw).t();
 
-    cv::Mat Rwl = Tcw.rowRange(0,3).colRange(0,3).t();
-    cv::Mat tlr = mTlr.rowRange(0,3).col(3);
+    cv::Mat Rwl = Tcw.rowRange(0, 3).colRange(0, 3).t();
+    cv::Mat tlr = mTlr.rowRange(0, 3).col(3);
     cv::Mat twl = GetCameraCenter();
 
     cv::Mat twr = Rwl * tlr + twl;
 
     cv::Mat Twr;
-    cv::hconcat(Rwr,twr,Twr);
+    cv::hconcat(Rwr, twr, Twr);
 
     return Twr.clone();
 }
 
-cv::Mat KeyFrame::GetRightPoseInverseH() {
+cv::Mat KeyFrame::GetRightPoseInverseH()
+{
     unique_lock<mutex> lock(mMutexPose);
-    cv::Mat Rrl = mTlr.rowRange(0,3).colRange(0,3).t();
-    cv::Mat Rlw = Tcw.rowRange(0,3).colRange(0,3).clone();
+    cv::Mat Rrl = mTlr.rowRange(0, 3).colRange(0, 3).t();
+    cv::Mat Rlw = Tcw.rowRange(0, 3).colRange(0, 3).clone();
     cv::Mat Rwr = (Rrl * Rlw).t();
 
-    cv::Mat Rwl = Tcw.rowRange(0,3).colRange(0,3).t();
-    cv::Mat tlr = mTlr.rowRange(0,3).col(3);
+    cv::Mat Rwl = Tcw.rowRange(0, 3).colRange(0, 3).t();
+    cv::Mat tlr = mTlr.rowRange(0, 3).col(3);
     cv::Mat twl = Ow.clone();
 
     cv::Mat twr = Rwl * tlr + twl;
 
     cv::Mat Twr;
-    cv::hconcat(Rwr,twr,Twr);
-    cv::Mat h(1,4,CV_32F,cv::Scalar(0.0f)); h.at<float>(3) = 1.0f;
-    cv::vconcat(Twr,h,Twr);
+    cv::hconcat(Rwr, twr, Twr);
+    cv::Mat h(1, 4, CV_32F, cv::Scalar(0.0f));
+    h.at<float>(3) = 1.0f;
+    cv::vconcat(Twr, h, Twr);
 
     return Twr.clone();
 }
 
-cv::Mat KeyFrame::GetRightCameraCenter() {
+cv::Mat KeyFrame::GetRightCameraCenter()
+{
     unique_lock<mutex> lock(mMutexPose);
-    cv::Mat Rwl = Tcw.rowRange(0,3).colRange(0,3).t();
-    cv::Mat tlr = mTlr.rowRange(0,3).col(3);
+    cv::Mat Rwl = Tcw.rowRange(0, 3).colRange(0, 3).t();
+    cv::Mat tlr = mTlr.rowRange(0, 3).col(3);
     cv::Mat twl = Ow.clone();
 
     cv::Mat twr = Rwl * tlr + twl;
@@ -1396,35 +1391,36 @@ cv::Mat KeyFrame::GetRightCameraCenter() {
     return twr.clone();
 }
 
-cv::Mat KeyFrame::GetRightRotation() {
+cv::Mat KeyFrame::GetRightRotation()
+{
     unique_lock<mutex> lock(mMutexPose);
-    cv::Mat Rrl = mTlr.rowRange(0,3).colRange(0,3).t();
-    cv::Mat Rlw = Tcw.rowRange(0,3).colRange(0,3).clone();
+    cv::Mat Rrl = mTlr.rowRange(0, 3).colRange(0, 3).t();
+    cv::Mat Rlw = Tcw.rowRange(0, 3).colRange(0, 3).clone();
     cv::Mat Rrw = Rrl * Rlw;
 
     return Rrw.clone();
-
 }
 
-cv::Mat KeyFrame::GetRightTranslation() {
+cv::Mat KeyFrame::GetRightTranslation()
+{
     unique_lock<mutex> lock(mMutexPose);
-    cv::Mat Rrl = mTlr.rowRange(0,3).colRange(0,3).t();
-    cv::Mat tlw = Tcw.rowRange(0,3).col(3).clone();
-    cv::Mat trl = - Rrl * mTlr.rowRange(0,3).col(3);
+    cv::Mat Rrl = mTlr.rowRange(0, 3).colRange(0, 3).t();
+    cv::Mat tlw = Tcw.rowRange(0, 3).col(3).clone();
+    cv::Mat trl = -Rrl * mTlr.rowRange(0, 3).col(3);
 
     cv::Mat trw = Rrl * tlw + trl;
 
     return trw.clone();
 }
 
-void KeyFrame::SetORBVocabulary(ORBVocabulary* pORBVoc)
+void KeyFrame::SetORBVocabulary(ORBVocabulary *pORBVoc)
 {
     mpORBvocabulary = pORBVoc;
 }
 
-void KeyFrame::SetKeyFrameDatabase(KeyFrameDatabase* pKFDB)
+void KeyFrame::SetKeyFrameDatabase(KeyFrameDatabase *pKFDB)
 {
     mpKeyFrameDB = pKFDB;
 }
 
-} //namespace ORB_SLAM
+} // namespace ORB_SLAM3
